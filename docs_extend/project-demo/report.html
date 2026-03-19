@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Insight-Fuxi - 报告中心</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .report-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .filter-group {
+      display: flex;
+      gap: 8px;
+    }
+    .filter-btn {
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      font-size: 12px;
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+    .filter-btn:hover, .filter-btn.active {
+      border-color: var(--accent);
+      color: var(--accent-light);
+      background: var(--accent-bg);
+    }
+    .report-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    .report-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+    .report-card:hover {
+      border-color: var(--border-light);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+    .report-preview {
+      height: 160px;
+      background: var(--bg-tertiary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 48px;
+      position: relative;
+    }
+    .report-preview .report-type-badge {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+    }
+    .report-body {
+      padding: 16px;
+    }
+    .report-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .report-desc {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: 10px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .report-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .report-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    /* Report detail modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      width: 90%;
+      max-width: 900px;
+      max-height: 85vh;
+      overflow-y: auto;
+      box-shadow: var(--shadow-lg);
+    }
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .modal-header h3 { font-size: 16px; font-weight: 600; }
+    .modal-close {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-sm);
+      border: none;
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-close:hover { background: var(--bg-hover); color: var(--text-primary); }
+    .modal-body { padding: 24px; }
+    .report-section {
+      margin-bottom: 24px;
+    }
+    .report-section h4 {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .report-section p {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.8;
+    }
+    .report-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .report-kpi {
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      text-align: center;
+    }
+    .report-kpi .kpi-label { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
+    .report-kpi .kpi-value { font-size: 20px; font-weight: 700; }
+    .report-kpi .kpi-change { font-size: 11px; margin-top: 2px; }
+
+    @media (max-width: 1200px) { .report-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 768px) { .report-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="app-layout">
+    <aside class="sidebar" id="sidebar"></aside>
+    <main class="main-content">
+      <header class="header" id="header"></header>
+      <div class="page-content">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+          <h1 class="page-title">报告中心</h1>
+          <button class="btn btn-primary" onclick="alert('新建报告功能开发中')">+ 新建报告</button>
+        </div>
+        <p class="page-subtitle">管理和浏览所有分析报告，支持自动生成和手动编辑</p>
+
+        <div class="report-toolbar">
+          <div class="filter-group">
+            <span class="filter-btn active" onclick="filterReport(this,'all')">全部</span>
+            <span class="filter-btn" onclick="filterReport(this,'auto')">自动生成</span>
+            <span class="filter-btn" onclick="filterReport(this,'manual')">手动创建</span>
+            <span class="filter-btn" onclick="filterReport(this,'template')">模板生成</span>
+          </div>
+          <div style="margin-left:auto">
+            <input class="input" style="width:220px" placeholder="搜索报告..." />
+          </div>
+        </div>
+
+        <div class="report-grid" id="reportGrid">
+          <div class="report-card fade-in" style="animation-delay:0.05s" onclick="openReport('weekly')">
+            <div class="report-preview">
+              📊
+              <span class="tag tag-success report-type-badge">自动</span>
+            </div>
+            <div class="report-body">
+              <div class="report-title">周报 - 2026年第10周</div>
+              <div class="report-desc">核心经营指标周度分析报告，包含GMV、UV、转化率、客单价的趋势和对比分析</div>
+              <div class="report-footer">
+                <span>2026-03-09 · 自动生成</span>
+                <div class="report-actions">
+                  <span class="tag tag-info">已发布</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="report-card fade-in" style="animation-delay:0.1s" onclick="openReport('category')">
+            <div class="report-preview">
+              📈
+              <span class="tag tag-accent report-type-badge">手动</span>
+            </div>
+            <div class="report-body">
+              <div class="report-title">品类深度分析报告</div>
+              <div class="report-desc">各品类GMV、转化率、客单价的深度分析，包含品类间对比和归因分析</div>
+              <div class="report-footer">
+                <span>2026-03-08 · 手动创建</span>
+                <div class="report-actions">
+                  <span class="tag tag-info">已发布</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="report-card fade-in" style="animation-delay:0.15s" onclick="openReport('promo')">
+            <div class="report-preview">
+              🎯
+              <span class="tag tag-warning report-type-badge">模板</span>
+            </div>
+            <div class="report-body">
+              <div class="report-title">38大促复盘报告</div>
+              <div class="report-desc">38大促活动期间的整体表现复盘，包含活动效果、品类表现、渠道贡献分析</div>
+              <div class="report-footer">
+                <span>2026-03-05 · 模板生成</span>
+                <div class="report-actions">
+                  <span class="tag tag-info">已发布</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="report-card fade-in" style="animation-delay:0.2s" onclick="openReport('daily')">
+            <div class="report-preview">
+              📋
+              <span class="tag tag-success report-type-badge">自动</span>
+            </div>
+            <div class="report-body">
+              <div class="report-title">日报 - 2026年3月11日</div>
+              <div class="report-desc">每日核心指标概览，包含GMV、UV、订单量的日度变化和异常检测</div>
+              <div class="report-footer">
+                <span>2026-03-11 · 自动生成</span>
+                <div class="report-actions">
+                  <span class="tag tag-info">已发布</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="report-card fade-in" style="animation-delay:0.25s" onclick="openReport('channel')">
+            <div class="report-preview">
+              📡
+              <span class="tag tag-accent report-type-badge">手动</span>
+            </div>
+            <div class="report-body">
+              <div class="report-title">渠道效果分析报告</div>
+              <div class="report-desc">各渠道的流量、转化、ROI对比分析，识别高效渠道和优化方向</div>
+              <div class="report-footer">
+                <span>2026-03-07 · 手动创建</span>
+                <div class="report-actions">
+                  <span class="tag tag-warning">草稿</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="report-card fade-in" style="animation-delay:0.3s" onclick="openReport('anomaly')">
+            <div class="report-preview">
+              ⚠️
+              <span class="tag tag-success report-type-badge">自动</span>
+            </div>
+            <div class="report-body">
+              <div class="report-title">异常告警报告</div>
+              <div class="report-desc">系统自动检测到的指标异常汇总，包含异常描述、影响范围和建议措施</div>
+              <div class="report-footer">
+                <span>2026-03-10 · 自动生成</span>
+                <div class="report-actions">
+                  <span class="tag tag-danger">待处理</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Report Detail Modal -->
+  <div class="modal-overlay" id="reportModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modalTitle">报告详情</h3>
+        <button class="modal-close" onclick="closeReport()">×</button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <script src="js/common.js"></script>
+  <script>
+    initPage('report', ['Insight-Fuxi', '报告中心']);
+
+    function filterReport(el, type) {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      el.classList.add('active');
+    }
+
+    function openReport(type) {
+      const modal = document.getElementById('reportModal');
+      const title = document.getElementById('modalTitle');
+      const body = document.getElementById('modalBody');
+
+      const reports = {
+        weekly: {
+          title: '周报 - 2026年第10周',
+          content: `
+            <div class="report-kpi-grid">
+              <div class="report-kpi"><div class="kpi-label">GMV</div><div class="kpi-value">7,533万</div><div class="kpi-change" style="color:var(--danger)">↓ 12%</div></div>
+              <div class="report-kpi"><div class="kpi-label">UV</div><div class="kpi-value">285万</div><div class="kpi-change" style="color:var(--danger)">↓ 8%</div></div>
+              <div class="report-kpi"><div class="kpi-label">转化率</div><div class="kpi-value">3.2%</div><div class="kpi-change" style="color:var(--danger)">↓ 0.5%</div></div>
+              <div class="report-kpi"><div class="kpi-label">客单价</div><div class="kpi-value">¥826</div><div class="kpi-change" style="color:var(--success)">↑ 2.1%</div></div>
+            </div>
+            <div class="report-section">
+              <h4>核心指标概览</h4>
+              <p>本周（第10周）整体经营表现较上周有所下滑。GMV 环比下降 12%，主要受 UV 下降和转化率下降双重影响。客单价小幅上升 2.1%，部分抵消了流量下降的影响。</p>
+              <div class="chart-placeholder" style="margin-top:12px;height:180px">GMV 周度趋势图（模拟）</div>
+            </div>
+            <div class="report-section">
+              <h4>品类表现</h4>
+              <p>3C 数码品类表现最差，GMV 环比下降 23%，是整体下滑的最大贡献因素（贡献度 58%）。服饰品类基本持平，食品和家居品类小幅下降。</p>
+              <div class="chart-placeholder" style="margin-top:12px;height:180px">品类 GMV 对比图（模拟）</div>
+            </div>
+            <div class="report-section">
+              <h4>关键洞察与建议</h4>
+              <p>1. <strong>3C 品类转化率异常下降</strong>：建议排查商品详情页改版是否影响了用户体验<br>
+              2. <strong>华北地区 UV 下降明显</strong>：建议检查该地区的流量投放策略<br>
+              3. <strong>客单价逆势上升</strong>：高价商品占比提升，可能与促销策略调整有关</p>
+            </div>`
+        },
+        category: { title: '品类深度分析报告', content: '<div class="report-section"><h4>品类深度分析</h4><p>该报告包含各品类的详细分析数据。在实际系统中，这里将展示完整的品类对比图表、趋势分析和归因结果。</p><div class="chart-placeholder" style="margin-top:12px;height:200px">品类分析图表（模拟）</div></div>' },
+        promo: { title: '38大促复盘报告', content: '<div class="report-section"><h4>大促复盘</h4><p>38大促活动期间整体表现复盘。在实际系统中，这里将展示活动效果、品类表现、渠道贡献的完整分析。</p><div class="chart-placeholder" style="margin-top:12px;height:200px">大促效果图表（模拟）</div></div>' },
+        daily: { title: '日报 - 2026年3月11日', content: '<div class="report-section"><h4>每日概览</h4><p>每日核心指标概览。在实际系统中，这里将展示当日各项指标的变化和异常检测结果。</p><div class="chart-placeholder" style="margin-top:12px;height:200px">日度指标图表（模拟）</div></div>' },
+        channel: { title: '渠道效果分析报告', content: '<div class="report-section"><h4>渠道分析</h4><p>各渠道效果对比分析。在实际系统中，这里将展示各渠道的流量、转化、ROI完整对比。</p><div class="chart-placeholder" style="margin-top:12px;height:200px">渠道对比图表（模拟）</div></div>' },
+        anomaly: { title: '异常告警报告', content: '<div class="report-section"><h4>异常告警</h4><p>系统检测到以下异常：</p><ul style="margin-top:8px;padding-left:20px;font-size:13px;color:var(--text-secondary)"><li>3C品类转化率异常下降 23%（严重）</li><li>华北地区UV异常下降 15%（警告）</li><li>移动端页面加载时间增加 40%（警告）</li></ul></div>' },
+      };
+
+      const report = reports[type] || reports.weekly;
+      title.textContent = report.title;
+      body.innerHTML = report.content;
+      modal.classList.add('show');
+    }
+
+    function closeReport() {
+      document.getElementById('reportModal').classList.remove('show');
+    }
+
+    document.getElementById('reportModal').addEventListener('click', function(e) {
+      if (e.target === this) closeReport();
+    });
+  </script>
+</body>
+</html>

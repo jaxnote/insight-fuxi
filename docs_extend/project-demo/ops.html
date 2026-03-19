@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Insight-Fuxi - 平台运维</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .ops-tabs {
+      display: flex;
+      gap: 4px;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 24px;
+    }
+    .ops-tab {
+      padding: 10px 18px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all var(--transition);
+      font-weight: 500;
+    }
+    .ops-tab:hover { color: var(--text-primary); }
+    .ops-tab.active { color: var(--accent-light); border-bottom-color: var(--accent); }
+    .ops-content { display: none; }
+    .ops-content.active { display: block; }
+
+    /* Chart containers */
+    .chart-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .chart-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 20px;
+    }
+    .chart-card h4 {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 14px;
+    }
+    .mini-bar-chart {
+      display: flex;
+      align-items: flex-end;
+      gap: 3px;
+      height: 80px;
+    }
+    .mini-bar {
+      flex: 1;
+      background: var(--accent);
+      border-radius: 2px 2px 0 0;
+      transition: height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+      opacity: 0.7;
+      cursor: pointer;
+      position: relative;
+    }
+    .mini-bar:hover { opacity: 1; }
+    .mini-bar-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    /* Donut chart simulation */
+    .donut-chart {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      position: relative;
+      margin: 0 auto 16px;
+    }
+    .donut-center {
+      position: absolute;
+      inset: 25px;
+      background: var(--bg-card);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 700;
+    }
+    .donut-legend {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 12px;
+    }
+    .donut-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .donut-legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    /* Eval results */
+    .eval-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 20px;
+    }
+    .eval-metric {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .eval-metric:last-child { border-bottom: none; }
+    .eval-name { font-size: 13px; font-weight: 500; }
+    .eval-score {
+      font-size: 20px;
+      font-weight: 700;
+    }
+    .eval-bar-bg {
+      flex: 1;
+      height: 8px;
+      background: var(--bg-tertiary);
+      border-radius: 4px;
+      margin: 0 16px;
+      overflow: hidden;
+    }
+    .eval-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.8s ease;
+    }
+
+    /* User table */
+    .user-avatar-sm {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    /* Ranking */
+    .rank-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 0;
+      font-size: 13px;
+    }
+    .rank-num {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .rank-num.top { background: var(--accent-bg); color: var(--accent-light); }
+    .rank-num.normal { background: var(--bg-tertiary); color: var(--text-muted); }
+    .rank-name { flex: 1; }
+    .rank-value { color: var(--text-muted); }
+
+    @media (max-width: 1200px) { .chart-row { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="app-layout">
+    <aside class="sidebar" id="sidebar"></aside>
+    <main class="main-content">
+      <header class="header" id="header"></header>
+      <div class="page-content">
+        <h1 class="page-title">平台运维中心</h1>
+        <p class="page-subtitle">系统监控、用户管理、分析评测与运营看板</p>
+
+        <div class="ops-tabs">
+          <div class="ops-tab active" onclick="switchOps(this,'monitor')">系统监控</div>
+          <div class="ops-tab" onclick="switchOps(this,'users')">用户管理</div>
+          <div class="ops-tab" onclick="switchOps(this,'eval')">分析评测</div>
+          <div class="ops-tab" onclick="switchOps(this,'dashboard')">运营看板</div>
+          <div class="ops-tab" onclick="switchOps(this,'config')">系统配置</div>
+        </div>
+
+        <!-- Monitor -->
+        <div class="ops-content active" id="ops-monitor">
+          <div class="card-grid card-grid-4" style="margin-bottom:20px">
+            <div class="stat-card fade-in">
+              <div class="stat-label">今日请求量</div>
+              <div class="stat-value" style="color:var(--accent-light)">1,234</div>
+              <div class="stat-change up">↑ 12% 较昨日</div>
+            </div>
+            <div class="stat-card fade-in" style="animation-delay:0.05s">
+              <div class="stat-label">成功率</div>
+              <div class="stat-value" style="color:var(--success)">94.5%</div>
+              <div class="stat-change up">↑ 2.1%</div>
+            </div>
+            <div class="stat-card fade-in" style="animation-delay:0.1s">
+              <div class="stat-label">平均延迟</div>
+              <div class="stat-value">12.3s</div>
+              <div class="stat-change up">↓ 0.8s</div>
+            </div>
+            <div class="stat-card fade-in" style="animation-delay:0.15s">
+              <div class="stat-label">Token 消耗</div>
+              <div class="stat-value">45.6K</div>
+              <div class="stat-change down">↑ 15%</div>
+            </div>
+          </div>
+
+          <div class="chart-row">
+            <div class="chart-card fade-in" style="animation-delay:0.1s">
+              <h4>请求量趋势（24h）</h4>
+              <div class="mini-bar-chart" id="requestChart"></div>
+              <div class="mini-bar-labels">
+                <span>00:00</span>
+                <span>06:00</span>
+                <span>12:00</span>
+                <span>18:00</span>
+                <span>23:00</span>
+              </div>
+            </div>
+            <div class="chart-card fade-in" style="animation-delay:0.15s">
+              <h4>Agent 执行耗时分布</h4>
+              <div class="table-wrapper">
+                <table>
+                  <thead><tr><th>Agent</th><th>P50</th><th>P95</th><th>P99</th><th>成功率</th></tr></thead>
+                  <tbody>
+                    <tr><td>IntentAgent</td><td>1.2s</td><td>2.8s</td><td>5.1s</td><td><span style="color:var(--success)">96%</span></td></tr>
+                    <tr><td>PlanAgent</td><td>2.1s</td><td>4.5s</td><td>8.2s</td><td><span style="color:var(--success)">94%</span></td></tr>
+                    <tr><td>ExecAgent</td><td>3.5s</td><td>8.2s</td><td>15.0s</td><td><span style="color:var(--warning)">92%</span></td></tr>
+                    <tr><td>InsightAgent</td><td>2.8s</td><td>5.6s</td><td>9.8s</td><td><span style="color:var(--warning)">91%</span></td></tr>
+                    <tr><td>ValidateAgent</td><td>1.5s</td><td>3.2s</td><td>5.5s</td><td><span style="color:var(--success)">98%</span></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="chart-row">
+            <div class="chart-card fade-in" style="animation-delay:0.2s">
+              <h4>LLM 调用分布</h4>
+              <div style="display:flex;align-items:center;gap:24px">
+                <div class="donut-chart" style="background:conic-gradient(var(--accent) 0% 45%, var(--success) 45% 72%, var(--warning) 72% 88%, var(--info) 88% 100%)">
+                  <div class="donut-center">4 模型</div>
+                </div>
+                <div class="donut-legend">
+                  <div class="donut-legend-item"><div class="donut-legend-dot" style="background:var(--accent)"></div><span>GPT-4o (45%)</span></div>
+                  <div class="donut-legend-item"><div class="donut-legend-dot" style="background:var(--success)"></div><span>Claude-3.5 (27%)</span></div>
+                  <div class="donut-legend-item"><div class="donut-legend-dot" style="background:var(--warning)"></div><span>DeepSeek-V3 (16%)</span></div>
+                  <div class="donut-legend-item"><div class="donut-legend-dot" style="background:var(--info)"></div><span>Qwen-2.5 (12%)</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="chart-card fade-in" style="animation-delay:0.25s">
+              <h4>系统资源</h4>
+              <div style="display:flex;flex-direction:column;gap:14px">
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+                    <span>CPU</span><span>42%</span>
+                  </div>
+                  <div class="progress-bar"><div class="progress-fill accent" style="width:42%"></div></div>
+                </div>
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+                    <span>内存</span><span>68%</span>
+                  </div>
+                  <div class="progress-bar"><div class="progress-fill warning" style="width:68%"></div></div>
+                </div>
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+                    <span>磁盘</span><span>35%</span>
+                  </div>
+                  <div class="progress-bar"><div class="progress-fill success" style="width:35%"></div></div>
+                </div>
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+                    <span>数据库连接池</span><span>23/50</span>
+                  </div>
+                  <div class="progress-bar"><div class="progress-fill accent" style="width:46%"></div></div>
+                </div>
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+                    <span>Redis 缓存命中率</span><span>87%</span>
+                  </div>
+                  <div class="progress-bar"><div class="progress-fill success" style="width:87%"></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Users -->
+        <div class="ops-content" id="ops-users">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+            <h2 style="font-size:16px;font-weight:600">用户列表</h2>
+            <button class="btn btn-primary btn-sm" onclick="alert('添加用户功能开发中')">+ 添加用户</button>
+          </div>
+          <div class="card">
+            <div class="table-wrapper">
+              <table>
+                <thead><tr><th>用户</th><th>角色</th><th>分析次数</th><th>最后登录</th><th>状态</th><th>操作</th></tr></thead>
+                <tbody>
+                  <tr>
+                    <td style="display:flex;align-items:center;gap:8px"><div class="user-avatar-sm" style="background:var(--accent)">张</div> 张三</td>
+                    <td><span class="tag tag-accent">管理员</span></td>
+                    <td>256</td>
+                    <td>2026-03-12 10:23</td>
+                    <td><span class="tag tag-success">活跃</span></td>
+                    <td><button class="btn btn-ghost btn-sm">编辑</button></td>
+                  </tr>
+                  <tr>
+                    <td style="display:flex;align-items:center;gap:8px"><div class="user-avatar-sm" style="background:var(--success)">李</div> 李四</td>
+                    <td><span class="tag tag-info">分析师</span></td>
+                    <td>189</td>
+                    <td>2026-03-12 09:45</td>
+                    <td><span class="tag tag-success">活跃</span></td>
+                    <td><button class="btn btn-ghost btn-sm">编辑</button></td>
+                  </tr>
+                  <tr>
+                    <td style="display:flex;align-items:center;gap:8px"><div class="user-avatar-sm" style="background:var(--warning)">王</div> 王五</td>
+                    <td><span class="tag tag-info">分析师</span></td>
+                    <td>134</td>
+                    <td>2026-03-11 18:30</td>
+                    <td><span class="tag tag-success">活跃</span></td>
+                    <td><button class="btn btn-ghost btn-sm">编辑</button></td>
+                  </tr>
+                  <tr>
+                    <td style="display:flex;align-items:center;gap:8px"><div class="user-avatar-sm" style="background:var(--info)">赵</div> 赵六</td>
+                    <td><span class="tag" style="background:var(--bg-tertiary);color:var(--text-muted)">查看者</span></td>
+                    <td>45</td>
+                    <td>2026-03-10 14:20</td>
+                    <td><span class="tag" style="background:var(--bg-tertiary);color:var(--text-muted)">不活跃</span></td>
+                    <td><button class="btn btn-ghost btn-sm">编辑</button></td>
+                  </tr>
+                  <tr>
+                    <td style="display:flex;align-items:center;gap:8px"><div class="user-avatar-sm" style="background:#a855f7">陈</div> 陈七</td>
+                    <td><span class="tag tag-info">分析师</span></td>
+                    <td>98</td>
+                    <td>2026-03-12 08:15</td>
+                    <td><span class="tag tag-success">活跃</span></td>
+                    <td><button class="btn btn-ghost btn-sm">编辑</button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Eval -->
+        <div class="ops-content" id="ops-eval">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+            <h2 style="font-size:16px;font-weight:600">分析评测</h2>
+            <button class="btn btn-primary btn-sm" onclick="alert('运行评测功能开发中')">▶ 运行评测</button>
+          </div>
+
+          <div class="card-grid card-grid-4" style="margin-bottom:20px">
+            <div class="stat-card">
+              <div class="stat-label">综合评分</div>
+              <div class="stat-value" style="color:var(--success)">87.3</div>
+              <div class="stat-change up">↑ 2.5 较上次</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">测试用例</div>
+              <div class="stat-value">156</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">通过率</div>
+              <div class="stat-value" style="color:var(--success)">91.0%</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">最后评测</div>
+              <div class="stat-value" style="font-size:16px">3月11日</div>
+            </div>
+          </div>
+
+          <div class="eval-card fade-in">
+            <h4 style="font-size:14px;font-weight:600;margin-bottom:16px">各维度评分</h4>
+            <div class="eval-metric">
+              <span class="eval-name">分析正确性</span>
+              <div class="eval-bar-bg">
+                <div class="eval-bar-fill" style="width:92%;background:var(--success)"></div>
+              </div>
+              <span class="eval-score" style="color:var(--success)">92</span>
+            </div>
+            <div class="eval-metric">
+              <span class="eval-name">逻辑一致性</span>
+              <div class="eval-bar-bg">
+                <div class="eval-bar-fill" style="width:89%;background:var(--success)"></div>
+              </div>
+              <span class="eval-score" style="color:var(--success)">89</span>
+            </div>
+            <div class="eval-metric">
+              <span class="eval-name">洞察有效性</span>
+              <div class="eval-bar-bg">
+                <div class="eval-bar-fill" style="width:83%;background:var(--warning)"></div>
+              </div>
+              <span class="eval-score" style="color:var(--warning)">83</span>
+            </div>
+            <div class="eval-metric">
+              <span class="eval-name">可解释性</span>
+              <div class="eval-bar-bg">
+                <div class="eval-bar-fill" style="width:85%;background:var(--success)"></div>
+              </div>
+              <span class="eval-score" style="color:var(--success)">85</span>
+            </div>
+            <div class="eval-metric">
+              <span class="eval-name">响应性能</span>
+              <div class="eval-bar-bg">
+                <div class="eval-bar-fill" style="width:88%;background:var(--success)"></div>
+              </div>
+              <span class="eval-score" style="color:var(--success)">88</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dashboard -->
+        <div class="ops-content" id="ops-dashboard">
+          <div class="card-grid card-grid-3" style="margin-bottom:20px">
+            <div class="stat-card">
+              <div class="stat-label">DAU</div>
+              <div class="stat-value">48</div>
+              <div class="stat-change up">↑ 5 较昨日</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">日均提问量</div>
+              <div class="stat-value">1,234</div>
+              <div class="stat-change up">↑ 12%</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">用户满意度</div>
+              <div class="stat-value" style="color:var(--success)">4.2/5</div>
+              <div class="stat-change up">↑ 0.1</div>
+            </div>
+          </div>
+
+          <div class="chart-row">
+            <div class="card fade-in">
+              <div class="card-header">
+                <span class="card-title">热门分析问题</span>
+              </div>
+              <div class="rank-item"><span class="rank-num top">1</span><span class="rank-name">GMV 趋势分析</span><span class="rank-value">128次</span></div>
+              <div class="rank-item"><span class="rank-num top">2</span><span class="rank-name">品类对比分析</span><span class="rank-value">96次</span></div>
+              <div class="rank-item"><span class="rank-num top">3</span><span class="rank-name">转化率归因分析</span><span class="rank-value">87次</span></div>
+              <div class="rank-item"><span class="rank-num normal">4</span><span class="rank-name">渠道 ROI 排名</span><span class="rank-value">65次</span></div>
+              <div class="rank-item"><span class="rank-num normal">5</span><span class="rank-name">用户流失分析</span><span class="rank-value">52次</span></div>
+              <div class="rank-item"><span class="rank-num normal">6</span><span class="rank-name">客单价变化分析</span><span class="rank-value">48次</span></div>
+              <div class="rank-item"><span class="rank-num normal">7</span><span class="rank-name">地区销售对比</span><span class="rank-value">41次</span></div>
+            </div>
+            <div class="card fade-in" style="animation-delay:0.05s">
+              <div class="card-header">
+                <span class="card-title">能力覆盖度</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:14px">
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+                    <span>时序分析场景</span><span style="color:var(--success)">95%</span>
+                  </div>
+                  <div class="progress-bar"><div class="progress-fill success" style="width:95%"></div></div>
+                </div>
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+                    <span>对比分析场景</span><span style="color:var(--success)">88%</span>
+                  </div>
+                  <div class="progress-bar"><div class="progress-fill success" style="width:88%"></div></div>
+                </div>
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+                    <span>归因分析场景</span><span style="color:var(--warning)">76%</span>
+                  </div>
+                  <div class="progress-bar"><div class="progress-fill warning" style="width:76%"></div></div>
+                </div>
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+                    <span>探索分析场景</span><span style="color:var(--warning)">62%</span>
+                  </div>
+                  <div class="progress-bar"><div class="progress-fill warning" style="width:62%"></div></div>
+                </div>
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+                    <span>异常检测场景</span><span style="color:var(--warning)">71%</span>
+                  </div>
+                  <div class="progress-bar"><div class="progress-fill warning" style="width:71%"></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Config -->
+        <div class="ops-content" id="ops-config">
+          <h2 style="font-size:16px;font-weight:600;margin-bottom:16px">系统配置</h2>
+          <div class="card" style="margin-bottom:16px">
+            <div class="card-header">
+              <span class="card-title">LLM 模型配置</span>
+            </div>
+            <div class="table-wrapper">
+              <table>
+                <thead><tr><th>模型</th><th>用途</th><th>API Endpoint</th><th>状态</th><th>操作</th></tr></thead>
+                <tbody>
+                  <tr>
+                    <td><strong>GPT-4o</strong></td>
+                    <td>IntentAgent, InsightAgent</td>
+                    <td><code style="font-size:11px">https://api.openai.com/v1</code></td>
+                    <td><span class="tag tag-success">正常</span></td>
+                    <td><button class="btn btn-ghost btn-sm">编辑</button></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Claude-3.5 Sonnet</strong></td>
+                    <td>PlanAgent, ValidateAgent</td>
+                    <td><code style="font-size:11px">https://api.anthropic.com/v1</code></td>
+                    <td><span class="tag tag-success">正常</span></td>
+                    <td><button class="btn btn-ghost btn-sm">编辑</button></td>
+                  </tr>
+                  <tr>
+                    <td><strong>DeepSeek-V3</strong></td>
+                    <td>ExecAgent (SQL生成)</td>
+                    <td><code style="font-size:11px">https://api.deepseek.com/v1</code></td>
+                    <td><span class="tag tag-success">正常</span></td>
+                    <td><button class="btn btn-ghost btn-sm">编辑</button></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Qwen-2.5-72B</strong></td>
+                    <td>备用模型</td>
+                    <td><code style="font-size:11px">https://dashscope.aliyuncs.com</code></td>
+                    <td><span class="tag tag-success">正常</span></td>
+                    <td><button class="btn btn-ghost btn-sm">编辑</button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">全局参数</span>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+              <div class="form-group" style="margin-bottom:0">
+                <label style="font-size:12px;color:var(--text-muted);margin-bottom:4px;display:block">默认 Token 预算</label>
+                <input class="input" value="10000" />
+              </div>
+              <div class="form-group" style="margin-bottom:0">
+                <label style="font-size:12px;color:var(--text-muted);margin-bottom:4px;display:block">分析超时时间（秒）</label>
+                <input class="input" value="60" />
+              </div>
+              <div class="form-group" style="margin-bottom:0">
+                <label style="font-size:12px;color:var(--text-muted);margin-bottom:4px;display:block">最大修正次数</label>
+                <input class="input" value="3" />
+              </div>
+              <div class="form-group" style="margin-bottom:0">
+                <label style="font-size:12px;color:var(--text-muted);margin-bottom:4px;display:block">查询缓存时间（分钟）</label>
+                <input class="input" value="5" />
+              </div>
+              <div class="form-group" style="margin-bottom:0">
+                <label style="font-size:12px;color:var(--text-muted);margin-bottom:4px;display:block">探索性需求置信度阈值</label>
+                <input class="input" value="0.7" />
+              </div>
+              <div class="form-group" style="margin-bottom:0">
+                <label style="font-size:12px;color:var(--text-muted);margin-bottom:4px;display:block">API 限流（请求/分钟）</label>
+                <input class="input" value="100" />
+              </div>
+            </div>
+            <div style="margin-top:16px;text-align:right">
+              <button class="btn btn-primary" onclick="alert('配置已保存！')">保存配置</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="js/common.js"></script>
+  <script>
+    initPage('ops', ['Insight-Fuxi', '平台运维']);
+
+    function switchOps(el, tabId) {
+      document.querySelectorAll('.ops-tab').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+      document.querySelectorAll('.ops-content').forEach(c => c.classList.remove('active'));
+      document.getElementById('ops-' + tabId).classList.add('active');
+    }
+
+    // Animate request chart
+    setTimeout(() => {
+      const chart = document.getElementById('requestChart');
+      const data = [12,8,5,3,2,4,15,45,78,92,85,98,105,95,88,92,78,65,55,48,35,28,20,15];
+      const max = Math.max(...data);
+      data.forEach((v, i) => {
+        const bar = document.createElement('div');
+        bar.className = 'mini-bar';
+        bar.style.height = '0';
+        bar.title = `${String(i).padStart(2,'0')}:00 - ${v} 请求`;
+        chart.appendChild(bar);
+        setTimeout(() => {
+          bar.style.height = (v / max * 100) + '%';
+        }, i * 30 + 200);
+      });
+    }, 100);
+  </script>
+</body>
+</html>

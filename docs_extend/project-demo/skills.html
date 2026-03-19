@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Insight-Fuxi - Skill 管理</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .page-toolbar {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 20px; gap: 12px; flex-wrap: wrap;
+    }
+    .toolbar-left { display: flex; align-items: center; gap: 10px; }
+    .toolbar-search {
+      display: flex; align-items: center; gap: 6px;
+      background: var(--bg-tertiary); border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm); padding: 6px 12px; min-width: 240px;
+    }
+    .toolbar-search input {
+      background: transparent; border: none; outline: none;
+      color: var(--text-primary); font-size: 13px; flex: 1; font-family: inherit;
+    }
+    .toolbar-search input::placeholder { color: var(--text-muted); }
+    .type-filters { display: flex; gap: 6px; }
+    .type-filter {
+      padding: 5px 12px; border-radius: 16px; font-size: 12px;
+      border: 1px solid var(--border-color); background: var(--bg-card);
+      color: var(--text-secondary); cursor: pointer; transition: all var(--transition);
+    }
+    .type-filter:hover, .type-filter.active {
+      border-color: var(--accent); color: var(--accent-light); background: var(--accent-bg);
+    }
+
+    .stats-row {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px;
+    }
+    .mini-stat {
+      background: var(--bg-card); border: 1px solid var(--border-color);
+      border-radius: var(--radius-md); padding: 16px;
+    }
+    .mini-stat-label { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+    .mini-stat-value { font-size: 24px; font-weight: 700; }
+    .mini-stat-sub { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+    .view-toggle { display: flex; border: 1px solid var(--border-color); border-radius: var(--radius-sm); overflow: hidden; }
+    .view-btn {
+      padding: 6px 12px; font-size: 12px; border: none;
+      background: var(--bg-tertiary); color: var(--text-muted); cursor: pointer;
+      transition: all var(--transition);
+    }
+    .view-btn:not(:last-child) { border-right: 1px solid var(--border-color); }
+    .view-btn.active { background: var(--accent-bg); color: var(--accent-light); }
+
+    /* Card view */
+    .skill-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px;
+    }
+    .skill-card {
+      background: var(--bg-card); border: 1px solid var(--border-color);
+      border-radius: var(--radius-md); padding: 20px; cursor: pointer;
+      transition: all var(--transition); position: relative;
+    }
+    .skill-card:hover { border-color: var(--border-light); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    .skill-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; }
+    .skill-icon {
+      width: 44px; height: 44px; border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center; font-size: 22px;
+    }
+    .skill-icon.ts { background: rgba(59,130,246,0.12); }
+    .skill-icon.comp { background: rgba(34,197,94,0.12); }
+    .skill-icon.attr { background: rgba(245,158,11,0.12); }
+    .skill-icon.expl { background: rgba(168,85,247,0.12); }
+    .skill-icon.anom { background: rgba(239,68,68,0.12); }
+    .skill-icon.meta { background: rgba(99,102,241,0.12); }
+    .skill-name { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+    .skill-desc { font-size: 12px; color: var(--text-secondary); margin-bottom: 14px; line-height: 1.6; }
+    .skill-capabilities { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 14px; }
+    .skill-cap { padding: 2px 8px; border-radius: 4px; background: var(--bg-tertiary); font-size: 11px; color: var(--text-muted); }
+    .skill-stats {
+      display: flex; justify-content: space-between; padding-top: 12px;
+      border-top: 1px solid var(--border-color); font-size: 12px; color: var(--text-muted);
+    }
+    .skill-stat-value { color: var(--text-primary); font-weight: 600; }
+    .skill-card-actions {
+      position: absolute; top: 12px; right: 12px;
+      display: flex; gap: 4px; opacity: 0; transition: opacity var(--transition);
+    }
+    .skill-card:hover .skill-card-actions { opacity: 1; }
+    .sc-btn {
+      width: 26px; height: 26px; border-radius: var(--radius-sm);
+      border: 1px solid var(--border-color); background: var(--bg-secondary);
+      color: var(--text-muted); cursor: pointer; font-size: 11px;
+      display: flex; align-items: center; justify-content: center;
+      transition: all var(--transition);
+    }
+    .sc-btn:hover { border-color: var(--border-light); color: var(--text-primary); }
+    .sc-btn.danger:hover { border-color: var(--danger); color: var(--danger); }
+
+    /* Table view */
+    .skill-table-wrap {
+      background: var(--bg-card); border: 1px solid var(--border-color);
+      border-radius: var(--radius-md); overflow: hidden; display: none;
+    }
+    .skill-table-wrap.active { display: block; }
+    .skill-grid-wrap.active { display: grid; }
+    .skill-table { width: 100%; border-collapse: collapse; }
+    .skill-table th {
+      text-align: left; padding: 12px 16px; font-size: 11px;
+      color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--border-color); background: var(--bg-tertiary); font-weight: 600;
+    }
+    .skill-table td {
+      padding: 14px 16px; border-bottom: 1px solid var(--border-color);
+      font-size: 13px; vertical-align: middle;
+    }
+    .skill-table tr:last-child td { border-bottom: none; }
+    .skill-table tr:hover td { background: var(--bg-hover); }
+    .skill-name-cell { display: flex; align-items: center; gap: 10px; }
+    .action-btns { display: flex; gap: 4px; }
+    .action-btn {
+      width: 30px; height: 30px; border-radius: var(--radius-sm);
+      border: 1px solid var(--border-color); background: var(--bg-tertiary);
+      color: var(--text-muted); cursor: pointer; font-size: 12px;
+      display: flex; align-items: center; justify-content: center;
+      transition: all var(--transition);
+    }
+    .action-btn:hover { border-color: var(--border-light); color: var(--text-primary); background: var(--bg-hover); }
+    .action-btn.danger:hover { border-color: var(--danger); color: var(--danger); background: var(--danger-bg); }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+      z-index: 1000; display: none; align-items: center; justify-content: center;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: var(--bg-secondary); border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg); width: 90%; max-width: 700px;
+      max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-lg);
+      animation: fadeIn 0.2s ease;
+    }
+    .modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px 24px; border-bottom: 1px solid var(--border-color);
+      position: sticky; top: 0; background: var(--bg-secondary); z-index: 1;
+    }
+    .modal-header h3 { font-size: 16px; font-weight: 600; }
+    .modal-close {
+      width: 32px; height: 32px; border-radius: var(--radius-sm);
+      border: none; background: var(--bg-tertiary); color: var(--text-secondary);
+      cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center;
+    }
+    .modal-close:hover { background: var(--bg-hover); color: var(--text-primary); }
+    .modal-body { padding: 24px; }
+    .modal-footer {
+      padding: 16px 24px; border-top: 1px solid var(--border-color);
+      display: flex; justify-content: flex-end; gap: 10px;
+      position: sticky; bottom: 0; background: var(--bg-secondary);
+    }
+    .form-group { margin-bottom: 16px; }
+    .form-label { font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; display: block; }
+    .form-hint { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+    .form-select {
+      width: 100%; padding: 8px 12px; background: var(--bg-tertiary);
+      border: 1px solid var(--border-color); border-radius: var(--radius-sm);
+      color: var(--text-primary); font-size: 13px; font-family: inherit; outline: none;
+      appearance: none; cursor: pointer;
+    }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+    .param-builder { margin-top: 8px; }
+    .param-row {
+      display: grid; grid-template-columns: 1fr 100px 60px 1fr 30px; gap: 8px;
+      align-items: center; margin-bottom: 6px;
+    }
+    .param-row input, .param-row select { font-size: 12px; padding: 6px 8px; }
+    .param-remove {
+      width: 24px; height: 24px; border-radius: 50%; border: none;
+      background: var(--bg-tertiary); color: var(--text-muted); cursor: pointer;
+      font-size: 11px; display: flex; align-items: center; justify-content: center;
+    }
+    .param-remove:hover { background: var(--danger-bg); color: var(--danger); }
+
+    .param-table { width: 100%; margin-top: 12px; }
+    .param-table th { font-size: 11px; }
+    .param-table td { font-size: 12px; }
+
+    @media (max-width: 1200px) {
+      .skill-grid { grid-template-columns: repeat(2, 1fr); }
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-layout">
+    <aside class="sidebar" id="sidebar"></aside>
+    <main class="main-content">
+      <header class="header" id="header"></header>
+      <div class="page-content">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+          <h1 class="page-title">Skill 管理</h1>
+        </div>
+        <p class="page-subtitle">注册、管理和配置可复用的分析能力模块（Skills），构建分析能力武器库</p>
+
+        <!-- Stats -->
+        <div class="stats-row fade-in">
+          <div class="mini-stat">
+            <div class="mini-stat-label">注册 Skill</div>
+            <div class="mini-stat-value">6</div>
+            <div class="mini-stat-sub">本月新增 1</div>
+          </div>
+          <div class="mini-stat">
+            <div class="mini-stat-label">总调用次数</div>
+            <div class="mini-stat-value">3,730</div>
+            <div class="mini-stat-sub">日均 124</div>
+          </div>
+          <div class="mini-stat">
+            <div class="mini-stat-label">平均成功率</div>
+            <div class="mini-stat-value">93.8%</div>
+            <div class="mini-stat-sub">最低 88%（探索分析）</div>
+          </div>
+          <div class="mini-stat">
+            <div class="mini-stat-label">平均耗时</div>
+            <div class="mini-stat-value">4.2s</div>
+            <div class="mini-stat-sub">P99 12.5s</div>
+          </div>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="page-toolbar fade-in" style="animation-delay:0.05s">
+          <div class="toolbar-left">
+            <div class="toolbar-search">
+              <span>🔍</span>
+              <input placeholder="搜索 Skill 名称、描述..." />
+            </div>
+            <div class="type-filters">
+              <span class="type-filter active">全部</span>
+              <span class="type-filter" onclick="this.classList.toggle('active')">时序</span>
+              <span class="type-filter" onclick="this.classList.toggle('active')">对比</span>
+              <span class="type-filter" onclick="this.classList.toggle('active')">归因</span>
+              <span class="type-filter" onclick="this.classList.toggle('active')">探索</span>
+              <span class="type-filter" onclick="this.classList.toggle('active')">异常</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <div class="view-toggle">
+              <button class="view-btn active" onclick="switchView('card',this)">卡片</button>
+              <button class="view-btn" onclick="switchView('table',this)">列表</button>
+            </div>
+            <button class="btn btn-primary" onclick="openModal('create')">+ 注册 Skill</button>
+          </div>
+        </div>
+
+        <!-- Card View -->
+        <div class="skill-grid skill-grid-wrap active fade-in" id="cardView" style="animation-delay:0.1s">
+          <div class="skill-card" onclick="openDetail('ts')">
+            <div class="skill-card-actions">
+              <button class="sc-btn" title="编辑" onclick="event.stopPropagation();openModal('edit')">✎</button>
+              <button class="sc-btn" title="测试" onclick="event.stopPropagation();alert('测试功能开发中')">▶</button>
+              <button class="sc-btn danger" title="删除" onclick="event.stopPropagation();confirmDelete()">×</button>
+            </div>
+            <div class="skill-header">
+              <div class="skill-icon ts">📈</div>
+              <span class="tag tag-info">v2.1</span>
+            </div>
+            <div class="skill-name">时间序列分析</div>
+            <div class="skill-desc">支持同比、环比、趋势、季节性分析和异常检测，是最常用的分析能力</div>
+            <div class="skill-capabilities">
+              <span class="skill-cap">同比</span><span class="skill-cap">环比</span>
+              <span class="skill-cap">趋势</span><span class="skill-cap">季节性</span>
+              <span class="skill-cap">异常检测</span>
+            </div>
+            <div class="skill-stats">
+              <span>调用 <span class="skill-stat-value">1,234</span></span>
+              <span>成功率 <span class="skill-stat-value">96%</span></span>
+              <span>均耗时 <span class="skill-stat-value">3.2s</span></span>
+            </div>
+          </div>
+
+          <div class="skill-card" onclick="openDetail('comp')">
+            <div class="skill-card-actions">
+              <button class="sc-btn" title="编辑" onclick="event.stopPropagation();openModal('edit')">✎</button>
+              <button class="sc-btn" title="测试" onclick="event.stopPropagation();alert('测试功能开发中')">▶</button>
+              <button class="sc-btn danger" title="删除" onclick="event.stopPropagation();confirmDelete()">×</button>
+            </div>
+            <div class="skill-header">
+              <div class="skill-icon comp">📊</div>
+              <span class="tag tag-info">v1.8</span>
+            </div>
+            <div class="skill-name">对比分析</div>
+            <div class="skill-desc">支持分组对比、TopN排名、结构占比和基准对比，适用于多维度比较场景</div>
+            <div class="skill-capabilities">
+              <span class="skill-cap">分组对比</span><span class="skill-cap">TopN</span>
+              <span class="skill-cap">结构占比</span><span class="skill-cap">基准对比</span>
+            </div>
+            <div class="skill-stats">
+              <span>调用 <span class="skill-stat-value">987</span></span>
+              <span>成功率 <span class="skill-stat-value">94%</span></span>
+              <span>均耗时 <span class="skill-stat-value">2.8s</span></span>
+            </div>
+          </div>
+
+          <div class="skill-card" onclick="openDetail('attr')">
+            <div class="skill-card-actions">
+              <button class="sc-btn" title="编辑" onclick="event.stopPropagation();openModal('edit')">✎</button>
+              <button class="sc-btn" title="测试" onclick="event.stopPropagation();alert('测试功能开发中')">▶</button>
+              <button class="sc-btn danger" title="删除" onclick="event.stopPropagation();confirmDelete()">×</button>
+            </div>
+            <div class="skill-header">
+              <div class="skill-icon attr">🔍</div>
+              <span class="tag tag-info">v1.5</span>
+            </div>
+            <div class="skill-name">归因分析</div>
+            <div class="skill-desc">支持指标拆解、驱动因素识别、贡献度计算和瀑布图分析</div>
+            <div class="skill-capabilities">
+              <span class="skill-cap">指标拆解</span><span class="skill-cap">驱动因素</span>
+              <span class="skill-cap">贡献度</span><span class="skill-cap">瀑布图</span>
+            </div>
+            <div class="skill-stats">
+              <span>调用 <span class="skill-stat-value">756</span></span>
+              <span>成功率 <span class="skill-stat-value">91%</span></span>
+              <span>均耗时 <span class="skill-stat-value">5.1s</span></span>
+            </div>
+          </div>
+
+          <div class="skill-card" onclick="openDetail('expl')">
+            <div class="skill-card-actions">
+              <button class="sc-btn" title="编辑" onclick="event.stopPropagation();openModal('edit')">✎</button>
+              <button class="sc-btn" title="测试" onclick="event.stopPropagation();alert('测试功能开发中')">▶</button>
+              <button class="sc-btn danger" title="删除" onclick="event.stopPropagation();confirmDelete()">×</button>
+            </div>
+            <div class="skill-header">
+              <div class="skill-icon expl">🧭</div>
+              <span class="tag tag-info">v1.2</span>
+            </div>
+            <div class="skill-name">探索式分析</div>
+            <div class="skill-desc">支持假设生成与验证、相关性发现和下钻探索，适用于开放性分析问题</div>
+            <div class="skill-capabilities">
+              <span class="skill-cap">假设生成</span><span class="skill-cap">假设验证</span>
+              <span class="skill-cap">相关性</span><span class="skill-cap">下钻</span>
+            </div>
+            <div class="skill-stats">
+              <span>调用 <span class="skill-stat-value">432</span></span>
+              <span>成功率 <span class="skill-stat-value">88%</span></span>
+              <span>均耗时 <span class="skill-stat-value">8.5s</span></span>
+            </div>
+          </div>
+
+          <div class="skill-card" onclick="openDetail('anom')">
+            <div class="skill-card-actions">
+              <button class="sc-btn" title="编辑" onclick="event.stopPropagation();openModal('edit')">✎</button>
+              <button class="sc-btn" title="测试" onclick="event.stopPropagation();alert('测试功能开发中')">▶</button>
+              <button class="sc-btn danger" title="删除" onclick="event.stopPropagation();confirmDelete()">×</button>
+            </div>
+            <div class="skill-header">
+              <div class="skill-icon anom">⚠️</div>
+              <span class="tag tag-info">v1.3</span>
+            </div>
+            <div class="skill-name">异常检测</div>
+            <div class="skill-desc">支持统计异常、趋势突变、离群值检测和多维异常分析</div>
+            <div class="skill-capabilities">
+              <span class="skill-cap">Z-score</span><span class="skill-cap">IQR</span>
+              <span class="skill-cap">变点检测</span><span class="skill-cap">Isolation Forest</span>
+            </div>
+            <div class="skill-stats">
+              <span>调用 <span class="skill-stat-value">321</span></span>
+              <span>成功率 <span class="skill-stat-value">93%</span></span>
+              <span>均耗时 <span class="skill-stat-value">4.2s</span></span>
+            </div>
+          </div>
+
+          <div class="skill-card" onclick="openDetail('meta')">
+            <div class="skill-card-actions">
+              <button class="sc-btn" title="编辑" onclick="event.stopPropagation();openModal('edit')">✎</button>
+              <button class="sc-btn" title="测试" onclick="event.stopPropagation();alert('测试功能开发中')">▶</button>
+              <button class="sc-btn danger" title="删除" onclick="event.stopPropagation();confirmDelete()">×</button>
+            </div>
+            <div class="skill-header">
+              <div class="skill-icon meta">🗃️</div>
+              <span class="tag tag-info">v1.0</span>
+            </div>
+            <div class="skill-name">元数据查询</div>
+            <div class="skill-desc">查询数据表结构、字段信息、指标定义等元数据，为其他 Skill 提供上下文</div>
+            <div class="skill-capabilities">
+              <span class="skill-cap">表结构</span><span class="skill-cap">字段信息</span>
+              <span class="skill-cap">指标定义</span><span class="skill-cap">血缘关系</span>
+            </div>
+            <div class="skill-stats">
+              <span>调用 <span class="skill-stat-value">156</span></span>
+              <span>成功率 <span class="skill-stat-value">99%</span></span>
+              <span>均耗时 <span class="skill-stat-value">0.5s</span></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Table View -->
+        <div class="skill-table-wrap" id="tableView">
+          <table class="skill-table">
+            <thead>
+              <tr>
+                <th>Skill</th>
+                <th>类型</th>
+                <th>版本</th>
+                <th>能力</th>
+                <th>调用次数</th>
+                <th>成功率</th>
+                <th>均耗时</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><div class="skill-name-cell"><div class="skill-icon ts" style="width:32px;height:32px;font-size:16px">📈</div><span style="font-weight:600">时间序列分析</span></div></td>
+                <td><span class="tag tag-info">时序</span></td>
+                <td>v2.1</td>
+                <td><span class="skill-cap">同比</span> <span class="skill-cap">环比</span> <span class="skill-cap">趋势</span></td>
+                <td>1,234</td>
+                <td>96%</td>
+                <td>3.2s</td>
+                <td><div class="action-btns"><button class="action-btn" title="编辑" onclick="openModal('edit')">✎</button><button class="action-btn" title="详情" onclick="openDetail('ts')">👁</button><button class="action-btn danger" title="删除" onclick="confirmDelete()">×</button></div></td>
+              </tr>
+              <tr>
+                <td><div class="skill-name-cell"><div class="skill-icon comp" style="width:32px;height:32px;font-size:16px">📊</div><span style="font-weight:600">对比分析</span></div></td>
+                <td><span class="tag tag-info">对比</span></td>
+                <td>v1.8</td>
+                <td><span class="skill-cap">分组对比</span> <span class="skill-cap">TopN</span></td>
+                <td>987</td>
+                <td>94%</td>
+                <td>2.8s</td>
+                <td><div class="action-btns"><button class="action-btn" title="编辑" onclick="openModal('edit')">✎</button><button class="action-btn" title="详情" onclick="openDetail('comp')">👁</button><button class="action-btn danger" title="删除" onclick="confirmDelete()">×</button></div></td>
+              </tr>
+              <tr>
+                <td><div class="skill-name-cell"><div class="skill-icon attr" style="width:32px;height:32px;font-size:16px">🔍</div><span style="font-weight:600">归因分析</span></div></td>
+                <td><span class="tag tag-info">归因</span></td>
+                <td>v1.5</td>
+                <td><span class="skill-cap">指标拆解</span> <span class="skill-cap">贡献度</span></td>
+                <td>756</td>
+                <td>91%</td>
+                <td>5.1s</td>
+                <td><div class="action-btns"><button class="action-btn" title="编辑" onclick="openModal('edit')">✎</button><button class="action-btn" title="详情" onclick="openDetail('attr')">👁</button><button class="action-btn danger" title="删除" onclick="confirmDelete()">×</button></div></td>
+              </tr>
+              <tr>
+                <td><div class="skill-name-cell"><div class="skill-icon expl" style="width:32px;height:32px;font-size:16px">🧭</div><span style="font-weight:600">探索式分析</span></div></td>
+                <td><span class="tag tag-info">探索</span></td>
+                <td>v1.2</td>
+                <td><span class="skill-cap">假设生成</span> <span class="skill-cap">下钻</span></td>
+                <td>432</td>
+                <td>88%</td>
+                <td>8.5s</td>
+                <td><div class="action-btns"><button class="action-btn" title="编辑" onclick="openModal('edit')">✎</button><button class="action-btn" title="详情" onclick="openDetail('expl')">👁</button><button class="action-btn danger" title="删除" onclick="confirmDelete()">×</button></div></td>
+              </tr>
+              <tr>
+                <td><div class="skill-name-cell"><div class="skill-icon anom" style="width:32px;height:32px;font-size:16px">⚠️</div><span style="font-weight:600">异常检测</span></div></td>
+                <td><span class="tag tag-info">异常</span></td>
+                <td>v1.3</td>
+                <td><span class="skill-cap">Z-score</span> <span class="skill-cap">IQR</span></td>
+                <td>321</td>
+                <td>93%</td>
+                <td>4.2s</td>
+                <td><div class="action-btns"><button class="action-btn" title="编辑" onclick="openModal('edit')">✎</button><button class="action-btn" title="详情" onclick="openDetail('anom')">👁</button><button class="action-btn danger" title="删除" onclick="confirmDelete()">×</button></div></td>
+              </tr>
+              <tr>
+                <td><div class="skill-name-cell"><div class="skill-icon meta" style="width:32px;height:32px;font-size:16px">🗃️</div><span style="font-weight:600">元数据查询</span></div></td>
+                <td><span class="tag tag-info">元数据</span></td>
+                <td>v1.0</td>
+                <td><span class="skill-cap">表结构</span> <span class="skill-cap">血缘</span></td>
+                <td>156</td>
+                <td>99%</td>
+                <td>0.5s</td>
+                <td><div class="action-btns"><button class="action-btn" title="编辑" onclick="openModal('edit')">✎</button><button class="action-btn" title="详情" onclick="openDetail('meta')">👁</button><button class="action-btn danger" title="删除" onclick="confirmDelete()">×</button></div></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Register / Edit Skill Modal -->
+  <div class="modal-overlay" id="skillModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modalTitle">注册 Skill</h3>
+        <button class="modal-close" onclick="closeModal('skillModal')">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Skill 名称</label>
+          <input class="input" placeholder="例如: 漏斗分析" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Skill ID</label>
+          <input class="input" placeholder="例如: funnel_analysis（英文标识符）" />
+          <div class="form-hint">唯一标识符，用于 Agent Team 编排时引用</div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">分析类型</label>
+            <select class="form-select">
+              <option>时序分析</option>
+              <option>对比分析</option>
+              <option>归因分析</option>
+              <option>探索分析</option>
+              <option>异常检测</option>
+              <option>元数据查询</option>
+              <option>其他</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">版本</label>
+            <input class="input" value="v1.0" style="width:100px" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">描述</label>
+          <textarea class="input" rows="3" placeholder="描述此 Skill 的分析能力和适用场景" style="resize:vertical"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">输入参数</label>
+          <div class="form-hint" style="margin-top:0;margin-bottom:8px">定义 Skill 接收的输入参数</div>
+          <div class="param-builder" id="inputParams">
+            <div class="param-row">
+              <input class="input" placeholder="参数名" value="metric" />
+              <select class="form-select"><option>string</option><option>number</option><option>boolean</option><option>object</option><option>array</option></select>
+              <select class="form-select"><option>必填</option><option>可选</option></select>
+              <input class="input" placeholder="说明" value="分析指标名称" />
+              <button class="param-remove" onclick="this.parentElement.remove()">×</button>
+            </div>
+            <div class="param-row">
+              <input class="input" placeholder="参数名" value="time_range" />
+              <select class="form-select"><option selected>object</option><option>string</option><option>number</option><option>boolean</option><option>array</option></select>
+              <select class="form-select"><option>必填</option><option>可选</option></select>
+              <input class="input" placeholder="说明" value="分析时间范围" />
+              <button class="param-remove" onclick="this.parentElement.remove()">×</button>
+            </div>
+          </div>
+          <button class="btn btn-ghost btn-sm" style="margin-top:8px" onclick="addParam('inputParams')">+ 添加参数</button>
+        </div>
+        <div class="form-group">
+          <label class="form-label">输出字段</label>
+          <div class="param-builder" id="outputParams">
+            <div class="param-row">
+              <input class="input" placeholder="字段名" value="result" />
+              <select class="form-select"><option selected>object</option><option>string</option><option>number</option><option>boolean</option><option>array</option></select>
+              <select class="form-select"><option>必填</option><option>可选</option></select>
+              <input class="input" placeholder="说明" value="分析结果" />
+              <button class="param-remove" onclick="this.parentElement.remove()">×</button>
+            </div>
+            <div class="param-row">
+              <input class="input" placeholder="字段名" value="narrative" />
+              <select class="form-select"><option>string</option><option>number</option><option>boolean</option><option>object</option><option>array</option></select>
+              <select class="form-select"><option>必填</option><option>可选</option></select>
+              <input class="input" placeholder="说明" value="自然语言解读" />
+              <button class="param-remove" onclick="this.parentElement.remove()">×</button>
+            </div>
+          </div>
+          <button class="btn btn-ghost btn-sm" style="margin-top:8px" onclick="addParam('outputParams')">+ 添加字段</button>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">超时时间（秒）</label>
+            <input class="input" value="30" style="width:100px" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">最大重试次数</label>
+            <input class="input" value="2" style="width:100px" />
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('skillModal')">取消</button>
+        <button class="btn btn-primary" onclick="saveSkill()">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail Modal -->
+  <div class="modal-overlay" id="detailModal">
+    <div class="modal" style="max-width:750px">
+      <div class="modal-header">
+        <h3 id="detailTitle">Skill 详情</h3>
+        <button class="modal-close" onclick="closeModal('detailModal')">×</button>
+      </div>
+      <div class="modal-body" id="detailBody"></div>
+    </div>
+  </div>
+
+  <!-- Delete Confirm -->
+  <div class="modal-overlay" id="deleteModal">
+    <div class="modal" style="max-width:420px">
+      <div class="modal-header">
+        <h3>确认删除</h3>
+        <button class="modal-close" onclick="closeModal('deleteModal')">×</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">
+          确定要删除此 Skill 吗？删除后将无法恢复，且引用此 Skill 的 Agent Team 可能受到影响。
+        </p>
+        <div style="padding:10px;background:var(--danger-bg);border-radius:var(--radius-sm);font-size:12px;color:var(--danger)">
+          ⚠️ 此操作不可撤销。
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('deleteModal')">取消</button>
+        <button class="btn btn-primary" style="background:var(--danger)" onclick="closeModal('deleteModal');alert('已删除')">确认删除</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/common.js"></script>
+  <script>
+    initPage('skills', ['Insight-Fuxi', 'Skill 管理']);
+
+    function switchView(view, btn) {
+      document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('cardView').style.display = view === 'card' ? 'grid' : 'none';
+      document.getElementById('tableView').style.display = view === 'table' ? 'block' : 'none';
+    }
+
+    function openModal(mode) {
+      document.getElementById('modalTitle').textContent = mode === 'create' ? '注册 Skill' : '编辑 Skill';
+      document.getElementById('skillModal').classList.add('show');
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('show');
+    }
+
+    function saveSkill() {
+      alert('Skill 保存成功！');
+      closeModal('skillModal');
+    }
+
+    function confirmDelete() {
+      document.getElementById('deleteModal').classList.add('show');
+    }
+
+    function addParam(containerId) {
+      const container = document.getElementById(containerId);
+      const row = document.createElement('div');
+      row.className = 'param-row';
+      row.innerHTML = `
+        <input class="input" placeholder="参数名" />
+        <select class="form-select"><option>string</option><option>number</option><option>boolean</option><option>object</option><option>array</option></select>
+        <select class="form-select"><option>必填</option><option>可选</option></select>
+        <input class="input" placeholder="说明" />
+        <button class="param-remove" onclick="this.parentElement.remove()">×</button>
+      `;
+      container.appendChild(row);
+    }
+
+    function openDetail(type) {
+      const skills = {
+        ts: {
+          title: '时间序列分析 (time_series_analysis)',
+          content: `
+            <div style="margin-bottom:20px">
+              <span class="tag tag-info">v2.1</span>
+              <span class="tag tag-accent" style="margin-left:4px">时序分析</span>
+            </div>
+            <p style="font-size:13px;color:var(--text-secondary);margin-bottom:20px">
+              时间序列分析 Skill，支持同比（YoY）、环比（MoM/WoW/DoD）、趋势分析、季节性分析和异常检测。
+              是系统中最常用的分析能力，适用于各类指标的时间维度分析。
+            </p>
+            <h4 style="font-size:14px;font-weight:600;margin-bottom:12px">输入参数</h4>
+            <table class="param-table">
+              <thead><tr><th>参数名</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+              <tbody>
+                <tr><td>metric</td><td>string</td><td>✓</td><td>分析指标名称</td></tr>
+                <tr><td>time_range</td><td>TimeRange</td><td>✓</td><td>分析时间范围</td></tr>
+                <tr><td>granularity</td><td>enum</td><td></td><td>时间粒度（日/周/月/季/年）</td></tr>
+                <tr><td>compare_type</td><td>enum</td><td></td><td>对比类型（同比/环比/自定义）</td></tr>
+                <tr><td>detect_anomaly</td><td>bool</td><td></td><td>是否检测异常，默认true</td></tr>
+              </tbody>
+            </table>
+            <h4 style="font-size:14px;font-weight:600;margin:20px 0 12px">输出字段</h4>
+            <table class="param-table">
+              <thead><tr><th>字段</th><th>类型</th><th>说明</th></tr></thead>
+              <tbody>
+                <tr><td>trend</td><td>TrendResult</td><td>趋势分析结果</td></tr>
+                <tr><td>comparison</td><td>CompareResult</td><td>对比分析结果</td></tr>
+                <tr><td>anomalies</td><td>AnomalyList</td><td>异常点列表</td></tr>
+                <tr><td>narrative</td><td>string</td><td>自然语言解读</td></tr>
+              </tbody>
+            </table>
+            <h4 style="font-size:14px;font-weight:600;margin:20px 0 12px">调用统计</h4>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+              <div style="background:var(--bg-tertiary);padding:12px;border-radius:var(--radius-sm);text-align:center">
+                <div style="font-size:20px;font-weight:700">1,234</div><div style="font-size:11px;color:var(--text-muted)">总调用</div>
+              </div>
+              <div style="background:var(--bg-tertiary);padding:12px;border-radius:var(--radius-sm);text-align:center">
+                <div style="font-size:20px;font-weight:700;color:var(--success)">96%</div><div style="font-size:11px;color:var(--text-muted)">成功率</div>
+              </div>
+              <div style="background:var(--bg-tertiary);padding:12px;border-radius:var(--radius-sm);text-align:center">
+                <div style="font-size:20px;font-weight:700">3.2s</div><div style="font-size:11px;color:var(--text-muted)">均耗时</div>
+              </div>
+            </div>`
+        },
+        comp: { title: '对比分析 (comparison_analysis)', content: '<p style="font-size:13px;color:var(--text-secondary)">对比分析 Skill 详情。支持分组对比、TopN排名、结构占比和基准对比。</p>' },
+        attr: { title: '归因分析 (attribution_analysis)', content: '<p style="font-size:13px;color:var(--text-secondary)">归因分析 Skill 详情。支持指标拆解、驱动因素识别、贡献度计算。</p>' },
+        expl: { title: '探索式分析 (exploration_analysis)', content: '<p style="font-size:13px;color:var(--text-secondary)">探索式分析 Skill 详情。支持假设生成与验证、相关性发现。</p>' },
+        anom: { title: '异常检测 (anomaly_detection)', content: '<p style="font-size:13px;color:var(--text-secondary)">异常检测 Skill 详情。支持统计异常、趋势突变、离群值检测。</p>' },
+        meta: { title: '元数据查询 (metadata_query)', content: '<p style="font-size:13px;color:var(--text-secondary)">元数据查询 Skill 详情。查询数据表结构、字段信息、指标定义等元数据。</p>' },
+      };
+      const skill = skills[type] || skills.ts;
+      document.getElementById('detailTitle').textContent = skill.title;
+      document.getElementById('detailBody').innerHTML = skill.content;
+      document.getElementById('detailModal').classList.add('show');
+    }
+
+    document.querySelectorAll('.modal-overlay').forEach(m => {
+      m.addEventListener('click', function(e) { if (e.target === this) this.classList.remove('show'); });
+    });
+  </script>
+</body>
+</html>

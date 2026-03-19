@@ -1,0 +1,13 @@
+{
+  "plugins": {
+    "browse": {
+      "enabled": true
+    },
+    "gitlab": {
+      "enabled": true
+    },
+    "superpowers": {
+      "enabled": true
+    }
+  }
+}
