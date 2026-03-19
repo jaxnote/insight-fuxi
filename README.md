@@ -1,9 +1,5 @@
 # insight-fuxi
-洞察-伏羲
-
 基于OpenClaw的多Agent数据分析平台
-
-开源项目OpenClaw：[https://github.com/openclaw/openclaw](https://github.com/openclaw/openclaw)
 
 # 1、产品架构
 
@@ -79,4 +75,6 @@ Plan-Execute：识别需求类型，
 - 如果是确定性需求：确定需求没问题，直接执行即可。
 
 # 4、其他调研资料
-元数据：https://open-metadata.org/
+OpenClaw：https://github.com/openclaw/openclaw
+OpenMetaData：https://open-metadata.org/
+MetricFlow开源平台（数据指标治理）：https://github.com/dbt-labs/metricflow
