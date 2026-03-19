@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>insight-fuxi 产品分层架构</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: linear-gradient(135deg, #f0f4ff 0%, #fafafa 50%, #f5f0ff 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-family: 'Noto Sans SC', 'Inter', sans-serif;
+    padding: 48px 24px;
+  }
+
+  .card {
+    background: #ffffff;
+    border-radius: 24px;
+    box-shadow: 0 8px 60px rgba(0,0,0,0.07), 0 2px 12px rgba(0,0,0,0.04);
+    padding: 52px 60px 44px;
+    width: 100%;
+    max-width: 920px;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 44px;
+  }
+
+  .header .badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    padding: 4px 14px;
+    border-radius: 20px;
+    margin-bottom: 14px;
+  }
+
+  .header h1 {
+    font-size: 26px;
+    font-weight: 700;
+    color: #1a1a2e;
+    letter-spacing: 0.04em;
+    margin-bottom: 8px;
+  }
+
+  .header p {
+    font-size: 13px;
+    color: #adb5bd;
+    font-weight: 300;
+    letter-spacing: 0.1em;
+  }
+
+  .layers {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .layer {
+    border-radius: 16px;
+    padding: 18px 22px 20px;
+    position: relative;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .layer:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 24px rgba(0,0,0,0.08);
+  }
+
+  .layer-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .layer-num {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: white;
+    flex-shrink: 0;
+  }
+
+  .layer-title {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .layer-en {
+    font-size: 11px;
+    font-weight: 300;
+    letter-spacing: 0.12em;
+    opacity: 0.6;
+    margin-left: 4px;
+  }
+
+  .items {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+  }
+
+  .item {
+    background: rgba(255,255,255,0.9);
+    border-radius: 10px;
+    padding: 9px 6px;
+    font-size: 13px;
+    font-weight: 400;
+    color: #2d2d2d;
+    text-align: center;
+    flex: 1;
+    border: 1px solid rgba(255,255,255,0.95);
+    box-shadow: 0 1px 6px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.8);
+    letter-spacing: 0.02em;
+    transition: background 0.15s ease;
+  }
+
+  .item:hover {
+    background: rgba(255,255,255,1);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+  }
+
+  /* 连接箭头 */
+  .connector {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 32px;
+    position: relative;
+  }
+
+  .connector::before {
+    content: '';
+    position: absolute;
+    width: 2px;
+    height: 22px;
+    top: 0;
+    background: linear-gradient(to bottom, #dee2e6, #ced4da);
+  }
+
+  .connector::after {
+    content: '';
+    position: absolute;
+    bottom: 2px;
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 7px solid #ced4da;
+  }
+
+  /* 各层颜色 */
+  .layer-ui {
+    background: linear-gradient(135deg, #dbe9ff 0%, #c5dbff 100%);
+    border: 1.5px solid #a5c8ff;
+  }
+  .layer-ui .layer-num { background: #1971c2; }
+  .layer-ui .layer-title { color: #1864ab; }
+  .layer-ui .item { border-color: rgba(165, 200, 255, 0.6); }
+
+  .layer-agent {
+    background: linear-gradient(135deg, #d3f9d8 0%, #b2f2bb 100%);
+    border: 1.5px solid #8ce99a;
+  }
+  .layer-agent .layer-num { background: #2f9e44; }
+  .layer-agent .layer-title { color: #2b8a3e; }
+  .layer-agent .item { border-color: rgba(140, 233, 154, 0.6); }
+
+  .layer-skill {
+    background: linear-gradient(135deg, #fff3bf 0%, #ffec99 100%);
+    border: 1.5px solid #ffd43b;
+  }
+  .layer-skill .layer-num { background: #e67700; }
+  .layer-skill .layer-title { color: #e67700; }
+  .layer-skill .item { border-color: rgba(255, 212, 59, 0.6); }
+
+  .layer-semantic {
+    background: linear-gradient(135deg, #f3d9fa 0%, #eebefa 100%);
+    border: 1.5px solid #da77f2;
+  }
+  .layer-semantic .layer-num { background: #9c36b5; }
+  .layer-semantic .layer-title { color: #862e9c; }
+  .layer-semantic .item { border-color: rgba(218, 119, 242, 0.6); }
+
+  .layer-data {
+    background: linear-gradient(135deg, #ffe3e3 0%, #ffc9c9 100%);
+    border: 1.5px solid #ff8787;
+  }
+  .layer-data .layer-num { background: #c92a2a; }
+  .layer-data .layer-title { color: #c92a2a; }
+  .layer-data .item { border-color: rgba(255, 135, 135, 0.6); }
+
+  .footer {
+    text-align: center;
+    margin-top: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+  }
+
+  .footer-line {
+    flex: 1;
+    height: 1px;
+    background: #f1f3f5;
+  }
+
+  .footer-text {
+    font-size: 11px;
+    color: #dee2e6;
+    letter-spacing: 0.12em;
+    font-weight: 300;
+    white-space: nowrap;
+  }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="header">
+    <div class="badge">Product Architecture</div>
+    <h1>insight-fuxi 产品分层架构</h1>
+    <p>Multi-Agent Data Analysis Platform · Powered by OpenClaw</p>
+  </div>
+
+  <div class="layers">
+
+    <div class="layer layer-ui">
+      <div class="layer-header">
+        <div class="layer-num">①</div>
+        <span class="layer-title">用户界面层</span>
+        <span class="layer-en">UI Layer</span>
+      </div>
+      <div class="items">
+        <div class="item">自然语言提问</div>
+        <div class="item">对话式交互</div>
+        <div class="item">可视化报告</div>
+        <div class="item">洞察推送</div>
+      </div>
+    </div>
+
+    <div class="connector"></div>
+
+    <div class="layer layer-agent">
+      <div class="layer-header">
+        <div class="layer-num">②</div>
+        <span class="layer-title">Agent 能力层</span>
+        <span class="layer-en">Agent Layer</span>
+      </div>
+      <div class="items">
+        <div class="item">意图理解 Agent</div>
+        <div class="item">分析规划 Agent</div>
+        <div class="item">执行引擎 Agent</div>
+        <div class="item">洞察引擎 Agent</div>
+      </div>
+    </div>
+
+    <div class="connector"></div>
+
+    <div class="layer layer-skill">
+      <div class="layer-header">
+        <div class="layer-num">③</div>
+        <span class="layer-title">分析能力库</span>
+        <span class="layer-en">Analytics Skills</span>
+      </div>
+      <div class="items">
+        <div class="item">时间序列分析</div>
+        <div class="item">对比分析</div>
+        <div class="item">归因分析</div>
+        <div class="item">探索分析</div>
+        <div class="item">异常检测</div>
+      </div>
+    </div>
+
+    <div class="connector"></div>
+
+    <div class="layer layer-semantic">
+      <div class="layer-header">
+        <div class="layer-num">④</div>
+        <span class="layer-title">语义理解层</span>
+        <span class="layer-en">Semantic Layer</span>
+      </div>
+      <div class="items">
+        <div class="item">指标库</div>
+        <div class="item">维度库</div>
+        <div class="item">实体库</div>
+        <div class="item">业务知识</div>
+        <div class="item">分析模板</div>
+      </div>
+    </div>
+
+    <div class="connector"></div>
+
+    <div class="layer layer-data">
+      <div class="layer-header">
+        <div class="layer-num">⑤</div>
+        <span class="layer-title">数据连接层</span>
+        <span class="layer-en">Data Layer</span>
+      </div>
+      <div class="items">
+        <div class="item">SQL 数据库</div>
+        <div class="item">API 接口</div>
+        <div class="item">数据仓库</div>
+        <div class="item">实时流</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <div class="footer-line"></div>
+    <span class="footer-text">insight-fuxi · 产品架构 v1.0 · 2026</span>
+    <div class="footer-line"></div>
+  </div>
+</div>
+</body>
+</html>
