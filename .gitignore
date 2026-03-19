@@ -1,1 +1,9 @@
 .DS_Store
+
+# 项目配置与文档（不纳入版本控制）
+.claude/
+.cursor/
+docs/
+docs_extend/
+idea.md
+notes.md
