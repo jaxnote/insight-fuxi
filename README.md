@@ -43,5 +43,7 @@ Plan-Execute：识别需求类型，
 
 # 4、其他调研资料
 OpenClaw：https://github.com/openclaw/openclaw
+
 OpenMetaData：https://open-metadata.org/
+
 MetricFlow开源平台（数据指标治理）：https://github.com/dbt-labs/metricflow
