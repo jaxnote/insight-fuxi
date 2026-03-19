@@ -1,9 +1,0 @@
-.DS_Store
-
-# 项目配置与文档（不纳入索引）
-.claude/
-.cursor/
-docs/
-docs_extend/
-idea.md
-notes.md
