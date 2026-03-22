@@ -1,0 +1,47 @@
+suite: 面板布局
+module: nl-analysis
+version: "1.0"
+
+cases:
+  - id: UI-PANEL-001
+    name: 默认状态_仅PanelB可见
+    priority: P0
+    tags: [layout, smoke, regression]
+    setup:
+      store_state: { panelA: { visible: false }, panelB: { visible: true }, panelC: { visible: false }, panelD: { visible: false } }
+    action: render_page
+    expected:
+      - { selector: "[data-testid=panel-b]", visible: true }
+      - { selector: "[data-testid=panel-a]", visible: false }
+      - { selector: "[data-testid=panel-c]", visible: false }
+
+  - id: UI-PANEL-002
+    name: 点击toggle展开PanelA
+    priority: P0
+    tags: [layout, interaction, regression]
+    setup:
+      store_state: { panelA: { visible: false } }
+    action: { type: click, target: "toggle-panel-a" }
+    expected:
+      - { selector: "[data-testid=panel-a]", visible: true }
+
+  - id: UI-PANEL-003
+    name: 再次点击toggle折叠PanelA
+    priority: P0
+    tags: [layout, interaction, regression]
+    setup:
+      store_state: { panelA: { visible: true, width: 240 } }
+    action: { type: click, target: "toggle-panel-a" }
+    expected:
+      - { selector: "[data-testid=panel-a]", visible: false }
+
+  - id: UI-PANEL-004
+    name: PanelD展开_文件树可见
+    priority: P1
+    tags: [layout, regression]
+    setup:
+      store_state: { panelD: { visible: false } }
+    action: { type: click, target: "toggle-panel-d" }
+    expected:
+      - { selector: "[data-testid=panel-d]", visible: true }
+      - { selector: "[data-testid=project-selector]", visible: true }
