@@ -17,11 +17,8 @@ class AgentGateway:
         self, query: str, conversation_id: str, agent_name: str = "openclaw", **kwargs
     ) -> AsyncIterator[dict]:
         agent_cls = self.registry.get(agent_name)
-        if agent_name == "openclaw":
-            agent = agent_cls(
-                api_url=getattr(settings, "openclaw_api_url", "http://localhost:8001"),
-                api_key=getattr(settings, "openclaw_api_key", ""),
-            )
+        if hasattr(agent_cls, "from_settings"):
+            agent = agent_cls.from_settings(settings)
         else:
             agent = agent_cls()
         async for event in agent.run(query, conversation_id, **kwargs):

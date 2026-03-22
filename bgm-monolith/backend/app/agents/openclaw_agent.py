@@ -7,6 +7,13 @@ from app.agents.base import AgentBase
 class OpenClawAgent(AgentBase):
     name = "openclaw"
 
+    @classmethod
+    def from_settings(cls, settings) -> "OpenClawAgent":
+        return cls(
+            api_url=getattr(settings, "openclaw_api_url", "http://localhost:8001"),
+            api_key=getattr(settings, "openclaw_api_key", ""),
+        )
+
     def __init__(self, api_url: str, api_key: str):
         self.api_url = api_url
         self.api_key = api_key
