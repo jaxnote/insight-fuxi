@@ -1,6 +1,7 @@
 import pytest
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from httpx import AsyncClient, ASGITransport
+import app.models  # noqa: F401 — ensure all ORM models are registered before create_all
 from app.models.base import Base
 from app.main import app
 from app.api.deps import get_conv_store, get_file_store_dep

@@ -9,5 +9,9 @@ class Settings(BaseSettings):
     debug: bool = False
     database_url: str = "sqlite+aiosqlite:///./dev.db"
 
+    conversation_backend: str = "mysql"
+    file_backend: str = "local"
+    storage_base_path: str = "./storage"
+
 
 settings = Settings()
