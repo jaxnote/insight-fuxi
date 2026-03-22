@@ -1,0 +1,34 @@
+suite: 项目文件 API
+module: projects
+version: "1.0"
+
+cases:
+  - id: API-FILE-001
+    name: 上传文件_获取文件树
+    priority: P0
+    tags: [crud, smoke, regression]
+    setup:
+      - { method: POST, path: /api/projects, body: { name: "文件项目" }, save_as: proj }
+      - { method: POST, path: "/api/projects/${proj.id}/files", body: { path: "report.md", content: "IyByZXBvcnQ=" } }
+    input: { method: GET, path: "/api/projects/${proj.id}/files" }
+    expected: { status: 200 }
+
+  - id: API-FILE-002
+    name: 删除文件
+    priority: P0
+    tags: [crud, regression]
+    setup:
+      - { method: POST, path: /api/projects, body: { name: "删除测试" }, save_as: proj }
+      - { method: POST, path: "/api/projects/${proj.id}/files", body: { path: "to_delete.md", content: "dGVzdA==" } }
+    input: { method: DELETE, path: "/api/projects/${proj.id}/files/to_delete.md" }
+    expected: { status: 204 }
+
+  - id: API-FILE-003
+    name: 移动文件
+    priority: P1
+    tags: [crud, regression]
+    setup:
+      - { method: POST, path: /api/projects, body: { name: "移动测试" }, save_as: proj }
+      - { method: POST, path: "/api/projects/${proj.id}/files", body: { path: "old.md", content: "dGVzdA==" } }
+    input: { method: PATCH, path: "/api/projects/${proj.id}/files/old.md", body: { new_path: "new.md" } }
+    expected: { status: 200 }

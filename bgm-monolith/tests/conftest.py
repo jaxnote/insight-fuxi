@@ -5,6 +5,7 @@ import app.models  # noqa: F401 — ensure all ORM models are registered before 
 from app.models.base import Base
 from app.main import app
 from app.api.deps import get_conv_store, get_file_store_dep
+from app.api.projects.projects import get_project_store, InMemoryProjectStore
 
 # SQLite in-memory for tests (fast, no external DB needed)
 TEST_DB_URL = "sqlite+aiosqlite:///:memory:"
@@ -31,13 +32,15 @@ async def db_session(db_engine):
 @pytest.fixture
 async def client(db_session):
     """FastAPI TestClient with dependency overrides."""
-    # Override storage deps — share the same store instance within a test
     from tests.factories import InMemoryConversationStore, InMemoryFileStore
 
     conv_store = InMemoryConversationStore()
     file_store = InMemoryFileStore()
+    proj_store = InMemoryProjectStore()
+
     app.dependency_overrides[get_conv_store] = lambda: conv_store
     app.dependency_overrides[get_file_store_dep] = lambda: file_store
+    app.dependency_overrides[get_project_store] = lambda: proj_store
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as c:
