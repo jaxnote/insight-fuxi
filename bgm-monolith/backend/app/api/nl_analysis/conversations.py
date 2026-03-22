@@ -33,9 +33,11 @@ async def list_conversations(
 ):
     if q:
         items = await store.search(q)
+        total = await store.count(query=q)
     else:
         items = await store.list_all(offset=offset, limit=limit)
-    return {"items": items, "total": len(items)}
+        total = await store.count()
+    return {"items": items, "total": total}
 
 
 @router.get("/{conv_id}", response_model=ConversationOut)
@@ -70,6 +72,12 @@ async def delete_conversation(conv_id: str, store=Depends(get_conv_store)):
 
 @router.post("/merge")
 async def merge_conversations(body: MergeRequest, store=Depends(get_conv_store)):
+    merged_count = 0
+    not_found = []
     for conv_id in body.ids:
-        await store.update(conv_id, folder=body.folder)
-    return {"merged": len(body.ids), "folder": body.folder}
+        result = await store.update(conv_id, folder=body.folder)
+        if result is not None:
+            merged_count += 1
+        else:
+            not_found.append(conv_id)
+    return {"merged": merged_count, "not_found": not_found}

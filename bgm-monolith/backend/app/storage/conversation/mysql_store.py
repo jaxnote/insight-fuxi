@@ -1,7 +1,7 @@
 import json
 import uuid
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.conversation import Conversation, Message
@@ -117,3 +117,13 @@ class MySQLConversationStore(ConversationStoreBase):
         stmt = select(Conversation).where(Conversation.title.ilike(f"%{query}%"))
         rows = (await self._session.execute(stmt)).scalars().all()
         return [_conv_to_dict(r) for r in rows]
+
+    async def count(self, query: str | None = None) -> int:
+        if query:
+            stmt = select(func.count()).select_from(Conversation).where(
+                Conversation.title.ilike(f"%{query}%")
+            )
+        else:
+            stmt = select(func.count()).select_from(Conversation)
+        result = await self._session.execute(stmt)
+        return result.scalar_one()

@@ -32,3 +32,6 @@ class ConversationStoreBase(ABC):
 
     @abstractmethod
     async def search(self, query: str) -> list[dict]: ...
+
+    @abstractmethod
+    async def count(self, query: str | None = None) -> int: ...

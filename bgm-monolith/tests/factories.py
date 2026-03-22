@@ -74,6 +74,11 @@ class InMemoryConversationStore:
     async def search(self, query):
         return [c for c in self._data.values() if query.lower() in c["title"].lower()]
 
+    async def count(self, query=None):
+        if query:
+            return len([c for c in self._data.values() if query.lower() in c["title"].lower()])
+        return len(self._data)
+
 
 class InMemoryFileStore:
     """In-memory mock for file storage tests."""
