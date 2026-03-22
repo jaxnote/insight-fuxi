@@ -44,16 +44,16 @@ def _assert_body(actual: dict, expected: dict, case_id: str):
     for key, val in expected.items():
         if key.endswith("_count"):
             real_key = key.replace("_count", "")
-            assert real_key in actual, f'{case_id}: response missing field "{real_key}"'
-            assert len(actual[real_key]) == val, f"{case_id}: {key} expected {val}, got {len(actual[real_key])}"
+            assert real_key in actual, f'{case_id}: 响应中缺少字段 "{real_key}"'
+            assert len(actual[real_key]) == val, f"{case_id}: {key} 期望 {val}, 实际 {len(actual[real_key])}"
         elif "[" in key:
             # items[0].title 格式
             parts = re.match(r"(\w+)\[(\d+)\]\.(\w+)", key)
             if parts:
                 arr, idx, field = parts.group(1), int(parts.group(2)), parts.group(3)
-                assert arr in actual, f'{case_id}: response missing field "{arr}"'
-                assert len(actual[arr]) > idx, f"{case_id}: {arr} has {len(actual[arr])} items, index {idx} out of range"
-                assert actual[arr][idx][field] == val, f"{case_id}: {key} expected {val}, got {actual[arr][idx].get(field)}"
+                assert arr in actual, f'{case_id}: 响应中缺少字段 "{arr}"'
+                assert len(actual[arr]) > idx, f"{case_id}: {arr} 长度不足 {idx + 1}"
+                assert actual[arr][idx][field] == val, f"{case_id}: {key} 期望 {val}, 实际 {actual[arr][idx].get(field)}"
         else:
-            assert key in actual, f'{case_id}: response missing field "{key}"'
-            assert actual[key] == val, f"{case_id}: {key} expected {val}, got {actual[key]}"
+            assert key in actual, f'{case_id}: 响应中缺少字段 "{key}"'
+            assert actual[key] == val, f"{case_id}: {key} 期望 {val}, 实际 {actual.get(key)}"
