@@ -24,7 +24,7 @@ async def run_api_case(client, case: dict):
 
 
 def _resolve_vars(obj, saved: dict):
-    """递归替换 ${var.field} 占位符（仅替换字符串叶子）。"""
+    """替换 ${var.field} 占位符，对 dict/list 递归处理，只替换字符串叶子节点。"""
     if obj is None:
         return obj
     if isinstance(obj, dict):
@@ -45,15 +45,14 @@ def _assert_body(actual: dict, expected: dict, case_id: str):
         if key.endswith("_count"):
             real_key = key.replace("_count", "")
             assert real_key in actual, f'{case_id}: 响应中缺少字段 "{real_key}"'
-            assert len(actual[real_key]) == val, f"{case_id}: {key} 期望 {val}, 实际 {len(actual[real_key])}"
+            assert len(actual[real_key]) == val, f"{case_id}: {key} expected {val}, got {len(actual[real_key])}"
         elif "[" in key:
-            # items[0].title 格式
             parts = re.match(r"(\w+)\[(\d+)\]\.(\w+)", key)
             if parts:
                 arr, idx, field = parts.group(1), int(parts.group(2)), parts.group(3)
                 assert arr in actual, f'{case_id}: 响应中缺少字段 "{arr}"'
-                assert len(actual[arr]) > idx, f"{case_id}: {arr} 长度不足 {idx + 1}"
-                assert actual[arr][idx][field] == val, f"{case_id}: {key} 期望 {val}, 实际 {actual[arr][idx].get(field)}"
+                assert len(actual[arr]) > idx, f"{case_id}: {arr} 长度不足，期望至少 {idx + 1} 项"
+                assert actual[arr][idx][field] == val, f"{case_id}: {key} expected {val}, got {actual[arr][idx].get(field)}"
         else:
             assert key in actual, f'{case_id}: 响应中缺少字段 "{key}"'
-            assert actual[key] == val, f"{case_id}: {key} 期望 {val}, 实际 {actual.get(key)}"
+            assert actual[key] == val, f"{case_id}: {key} expected {val}, got {actual.get(key)}"
