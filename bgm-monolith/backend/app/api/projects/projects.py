@@ -27,9 +27,13 @@ class InMemoryProjectStore:
 
 router = APIRouter(prefix="/projects")
 
+# MVP: 进程内共享的内存项目存储。生产环境应替换为数据库实现。
+_default_project_store = InMemoryProjectStore()
+
 
 def get_project_store() -> InMemoryProjectStore:
-    raise NotImplementedError("Override get_project_store via app.dependency_overrides in tests")
+    """返回项目存储。测试中通过 app.dependency_overrides 替换。"""
+    return _default_project_store
 
 
 @router.post("", status_code=201, response_model=ProjectOut)
