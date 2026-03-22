@@ -1,0 +1,57 @@
+suite: 会话历史 Panel A
+module: nl-analysis
+version: "1.0"
+
+cases:
+  - id: UI-HIST-001
+    name: 空会话列表_显示空状态
+    priority: P0
+    tags: [render, smoke, regression]
+    setup:
+      store_state: { conversations: [] }
+    action: render_page
+    expected:
+      - { selector: "[data-testid=conversation-history]", visible: true }
+      - { selector: "[data-testid=empty-state]", visible: true }
+
+  - id: UI-HIST-002
+    name: 有会话时渲染列表
+    priority: P0
+    tags: [render, regression]
+    setup:
+      store_state:
+        conversations:
+          - { id: "1", title: "GMV分析", folder: null, pinned: 0, model_name: "gpt-4o", mode: "agent", token_used: 0, token_limit: 128000, created_at: "2026-01-01T00:00:00" }
+          - { id: "2", title: "渠道ROI", folder: null, pinned: 0, model_name: "gpt-4o", mode: "agent", token_used: 0, token_limit: 128000, created_at: "2026-01-01T00:00:00" }
+    action: render_page
+    expected:
+      - { selector: "[data-testid=conversation-history]", visible: true }
+      - { selector: "[data-testid=agent-item-1]", visible: true }
+      - { selector: "[data-testid=agent-item-2]", visible: true }
+      - { selector: "[data-testid=empty-state]", visible: false }
+
+  - id: UI-HIST-003
+    name: 搜索过滤_只显示匹配项
+    priority: P0
+    tags: [search, interaction, regression]
+    setup:
+      store_state:
+        conversations:
+          - { id: "1", title: "GMV分析", folder: null, pinned: 0, model_name: "gpt-4o", mode: "agent", token_used: 0, token_limit: 128000, created_at: "2026-01-01T00:00:00" }
+          - { id: "2", title: "渠道ROI", folder: null, pinned: 0, model_name: "gpt-4o", mode: "agent", token_used: 0, token_limit: 128000, created_at: "2026-01-01T00:00:00" }
+    action: { type: fill, target: "search-input", value: "GMV" }
+    expected:
+      - { selector: "[data-testid=agent-item-1]", visible: true }
+      - { selector: "[data-testid=agent-item-2]", visible: false }
+
+  - id: UI-HIST-004
+    name: 点击会话_设为当前会话
+    priority: P0
+    tags: [interaction, regression]
+    setup:
+      store_state:
+        conversations:
+          - { id: "conv-abc", title: "点击测试", folder: null, pinned: 0, model_name: "gpt-4o", mode: "agent", token_used: 0, token_limit: 128000, created_at: "2026-01-01T00:00:00" }
+    action: { type: click, target: "agent-item-conv-abc" }
+    expected:
+      - { selector: "[data-testid=agent-item-conv-abc]", visible: true }

@@ -1,4 +1,5 @@
 import { usePanelStore } from '../stores/panelStore'
+import ConversationHistory from './panel-a/ConversationHistory'
 
 export default function PanelContainer() {
   const { panelA, panelB, panelC, panelD, togglePanel } = usePanelStore()
@@ -29,9 +30,9 @@ export default function PanelContainer() {
       {panelA.visible && (
         <div
           data-testid="panel-a"
-          style={{ width: panelA.width, background: '#161629', borderRight: '1px solid #2a2a3e', padding: 8, paddingTop: 40, overflowY: 'auto' }}
+          style={{ width: panelA.width, background: '#161629', borderRight: '1px solid #2a2a3e', paddingTop: 40, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}
         >
-          <h3 style={{ fontSize: 12, color: '#888', marginBottom: 8 }}>Conversations</h3>
+          <ConversationHistory />
         </div>
       )}
 
