@@ -13,5 +13,8 @@ class Settings(BaseSettings):
     file_backend: str = "local"
     storage_base_path: str = "./storage"
 
+    openclaw_api_url: str = "http://localhost:8001"
+    openclaw_api_key: str = ""
+
 
 settings = Settings()
