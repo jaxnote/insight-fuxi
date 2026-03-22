@@ -1,0 +1,25 @@
+suite: 输入区
+module: nl-analysis
+version: "1.0"
+cases:
+  - id: UI-INPUT-001
+    name: 输入框存在且可交互
+    priority: P0
+    tags: [render, smoke, regression]
+    setup:
+      store_state: {}
+    action: render_page
+    expected:
+      - { selector: "[data-testid=input-area]", visible: true }
+      - { selector: "[data-testid=message-input]", visible: true }
+      - { selector: "[data-testid=send-btn]", visible: true }
+
+  - id: UI-INPUT-002
+    name: 输入内容后点击发送_清空输入框
+    priority: P0
+    tags: [interaction, regression]
+    setup:
+      store_state: {}
+    action: { type: fill_and_click, target: "message-input", value: "Hello", click_target: "send-btn" }
+    expected:
+      - { selector: "[data-testid=message-input]", visible: true }

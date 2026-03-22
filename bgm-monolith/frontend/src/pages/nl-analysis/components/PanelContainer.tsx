@@ -1,5 +1,10 @@
 import { usePanelStore } from '../stores/panelStore'
 import ConversationHistory from './panel-a/ConversationHistory'
+import ChatArea from './panel-b/ChatArea'
+import InputArea from './panel-b/InputArea'
+import EditorPreview from './panel-c/EditorPreview'
+import ProjectSelector from './panel-d/ProjectSelector'
+import FileTree from './panel-d/FileTree'
 
 export default function PanelContainer() {
   const { panelA, panelB, panelC, panelD, togglePanel } = usePanelStore()
@@ -39,32 +44,29 @@ export default function PanelContainer() {
       {panelB.visible && (
         <div
           data-testid="panel-b"
-          style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '40px 16px 16px' }}
+          style={{ flex: 1, display: 'flex', flexDirection: 'column', paddingTop: 40 }}
         >
-          <div style={{ flex: 1 }}>Chat Area</div>
+          <ChatArea />
+          <InputArea />
         </div>
       )}
 
       {panelC.visible && (
         <div
           data-testid="panel-c"
-          style={{ width: panelC.width, background: '#161629', borderLeft: '1px solid #2a2a3e', padding: 8 }}
+          style={{ width: panelC.width, background: '#161629', borderLeft: '1px solid #2a2a3e' }}
         >
-          <h3 style={{ fontSize: 12, color: '#888' }}>Editor / Preview</h3>
+          <EditorPreview />
         </div>
       )}
 
       {panelD.visible && (
         <div
           data-testid="panel-d"
-          style={{ width: panelD.width, background: '#161629', borderLeft: '1px solid #2a2a3e', padding: 8, paddingTop: 40 }}
+          style={{ width: panelD.width, background: '#161629', borderLeft: '1px solid #2a2a3e', paddingTop: 40, display: 'flex', flexDirection: 'column' }}
         >
-          <div data-testid="project-selector" style={{ marginBottom: 8 }}>
-            <select style={{ width: '100%', background: '#1e1e3a', color: '#ccc', border: '1px solid #444', borderRadius: 4, padding: 4 }}>
-              <option>Select Project...</option>
-            </select>
-          </div>
-          <h3 style={{ fontSize: 12, color: '#888' }}>File Tree</h3>
+          <ProjectSelector />
+          <FileTree />
         </div>
       )}
     </div>

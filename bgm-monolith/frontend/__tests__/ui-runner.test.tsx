@@ -4,11 +4,22 @@ import userEvent from '@testing-library/user-event'
 import { loadCases } from '../src/test-utils/loadCases'
 import PanelContainer from '../src/pages/nl-analysis/components/PanelContainer'
 import ConversationHistory from '../src/pages/nl-analysis/components/panel-a/ConversationHistory'
+import ChatArea from '../src/pages/nl-analysis/components/panel-b/ChatArea'
+import InputArea from '../src/pages/nl-analysis/components/panel-b/InputArea'
+import EditorPreview from '../src/pages/nl-analysis/components/panel-c/EditorPreview'
+import FileTree from '../src/pages/nl-analysis/components/panel-d/FileTree'
+import ProjectSelector from '../src/pages/nl-analysis/components/panel-d/ProjectSelector'
 import { usePanelStore } from '../src/pages/nl-analysis/stores/panelStore'
 import { useChatStore } from '../src/pages/nl-analysis/stores/chatStore'
+import { useEditorStore } from '../src/pages/nl-analysis/stores/editorStore'
+import { useFileTreeStore } from '../src/pages/nl-analysis/stores/fileTreeStore'
 
 const panelCases = loadCases('ui/nl-analysis/panel-layout.cases.yaml')
 const histCases = loadCases('ui/nl-analysis/conversation-history.cases.yaml')
+const chatCases = loadCases('ui/nl-analysis/chat-area.cases.yaml')
+const inputCases = loadCases('ui/nl-analysis/input-area.cases.yaml')
+const editorCases = loadCases('ui/nl-analysis/editor-preview.cases.yaml')
+const treeCases = loadCases('ui/nl-analysis/file-tree.cases.yaml')
 
 function resetStores(tc: any) {
   usePanelStore.setState({
@@ -21,7 +32,10 @@ function resetStores(tc: any) {
     conversations: [],
     currentConversationId: null,
     isLoading: false,
+    messages: [],
   })
+  useEditorStore.setState({ tabs: [], activeTabId: null })
+  useFileTreeStore.setState({ files: [], selectedProjectId: null })
 
   if (tc.setup?.store_state) {
     const ss = tc.setup.store_state
@@ -36,6 +50,15 @@ function resetStores(tc: any) {
     if (Array.isArray(ss.conversations)) {
       useChatStore.setState({ conversations: ss.conversations })
     }
+    if (Array.isArray(ss.messages)) {
+      useChatStore.setState({ messages: ss.messages })
+    }
+    if (Array.isArray(ss.tabs)) {
+      useEditorStore.setState({ tabs: ss.tabs, activeTabId: ss.tabs[0]?.id ?? null })
+    }
+    if (Array.isArray(ss.files)) {
+      useFileTreeStore.setState({ files: ss.files })
+    }
   }
 }
 
@@ -49,6 +72,12 @@ async function runAction(tc: any, user: ReturnType<typeof userEvent.setup>) {
     const el = screen.getByTestId(target)
     await user.clear(el)
     await user.type(el, value)
+  } else if (type === 'fill_and_click') {
+    const inputEl = screen.getByTestId(target)
+    await user.clear(inputEl)
+    await user.type(inputEl, value)
+    const clickEl = screen.getByTestId(tc.action.click_target)
+    await user.click(clickEl)
   }
 }
 
@@ -81,6 +110,51 @@ describe.each(histCases)('$id: $name', (tc: any) => {
   it('passes', async () => {
     const user = userEvent.setup()
     render(<ConversationHistory />)
+    await runAction(tc, user)
+    assertExpected(tc.expected)
+  })
+})
+
+describe.each(chatCases)('$id: $name', (tc: any) => {
+  beforeEach(() => resetStores(tc))
+  it('passes', async () => {
+    const user = userEvent.setup()
+    render(<ChatArea />)
+    await runAction(tc, user)
+    assertExpected(tc.expected)
+  })
+})
+
+describe.each(inputCases)('$id: $name', (tc: any) => {
+  beforeEach(() => resetStores(tc))
+  it('passes', async () => {
+    const user = userEvent.setup()
+    render(<InputArea />)
+    await runAction(tc, user)
+    assertExpected(tc.expected)
+  })
+})
+
+describe.each(editorCases)('$id: $name', (tc: any) => {
+  beforeEach(() => resetStores(tc))
+  it('passes', async () => {
+    const user = userEvent.setup()
+    render(<EditorPreview />)
+    await runAction(tc, user)
+    assertExpected(tc.expected)
+  })
+})
+
+describe.each(treeCases)('$id: $name', (tc: any) => {
+  beforeEach(() => resetStores(tc))
+  it('passes', async () => {
+    const user = userEvent.setup()
+    render(
+      <>
+        <ProjectSelector />
+        <FileTree />
+      </>
+    )
     await runAction(tc, user)
     assertExpected(tc.expected)
   })
