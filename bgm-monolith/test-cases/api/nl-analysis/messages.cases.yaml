@@ -1,0 +1,14 @@
+suite: 消息 API
+module: nl-analysis
+version: "1.0"
+
+cases:
+  - id: API-MSG-001
+    name: 添加消息_并查询
+    priority: P0
+    tags: [crud, regression]
+    setup:
+      - { method: POST, path: /api/nl-analysis/conversations, body: { title: "t" }, save_as: conv }
+      - { method: POST, path: "/api/nl-analysis/conversations/${conv.id}/messages", body: { role: user, content_type: text, content: "你好" } }
+    input: { method: GET, path: "/api/nl-analysis/conversations/${conv.id}/messages" }
+    expected: { status: 200 }

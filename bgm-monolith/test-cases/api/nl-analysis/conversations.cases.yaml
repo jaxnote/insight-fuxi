@@ -1,0 +1,66 @@
+suite: 会话管理 API
+module: nl-analysis
+version: "1.0"
+
+cases:
+  - id: API-CONV-001
+    name: 创建会话_正常标题
+    priority: P0
+    tags: [crud, smoke, regression]
+    input: { method: POST, path: /api/nl-analysis/conversations, body: { title: "GMV归因分析" } }
+    expected: { status: 201, body: { title: "GMV归因分析", mode: agent } }
+
+  - id: API-CONV-002
+    name: 创建会话_空标题_返回422
+    priority: P0
+    tags: [crud, validation, regression]
+    input: { method: POST, path: /api/nl-analysis/conversations, body: { title: "" } }
+    expected: { status: 422 }
+
+  - id: API-CONV-003
+    name: 列表会话_分页
+    priority: P0
+    tags: [crud, regression]
+    setup:
+      - { method: POST, path: /api/nl-analysis/conversations, body: { title: "会话1" } }
+      - { method: POST, path: /api/nl-analysis/conversations, body: { title: "会话2" } }
+    input: { method: GET, path: /api/nl-analysis/conversations }
+    expected: { status: 200, body: { items_count: 2 } }
+
+  - id: API-CONV-004
+    name: 搜索会话_关键字匹配
+    priority: P1
+    tags: [search, regression]
+    setup:
+      - { method: POST, path: /api/nl-analysis/conversations, body: { title: "GMV归因分析" } }
+      - { method: POST, path: /api/nl-analysis/conversations, body: { title: "渠道ROI对比" } }
+    input: { method: GET, path: /api/nl-analysis/conversations, params: { q: "GMV" } }
+    expected: { status: 200, body: { items_count: 1, "items[0].title": "GMV归因分析" } }
+
+  - id: API-CONV-005
+    name: 更新会话_重命名+置顶
+    priority: P0
+    tags: [crud, regression]
+    setup:
+      - { method: POST, path: /api/nl-analysis/conversations, body: { title: "old" }, save_as: conv }
+    input: { method: PATCH, path: "/api/nl-analysis/conversations/${conv.id}", body: { title: "new", pinned: 1 } }
+    expected: { status: 200, body: { title: "new", pinned: 1 } }
+
+  - id: API-CONV-006
+    name: 删除会话
+    priority: P0
+    tags: [crud, regression]
+    setup:
+      - { method: POST, path: /api/nl-analysis/conversations, body: { title: "to-delete" }, save_as: conv }
+    input: { method: DELETE, path: "/api/nl-analysis/conversations/${conv.id}" }
+    expected: { status: 204 }
+
+  - id: API-CONV-007
+    name: 合并会话到文件夹
+    priority: P1
+    tags: [folder, regression]
+    setup:
+      - { method: POST, path: /api/nl-analysis/conversations, body: { title: "a" }, save_as: conv_a }
+      - { method: POST, path: /api/nl-analysis/conversations, body: { title: "b" }, save_as: conv_b }
+    input: { method: POST, path: /api/nl-analysis/conversations/merge, body: { ids: ["${conv_a.id}", "${conv_b.id}"], folder: "Q1分析" } }
+    expected: { status: 200 }

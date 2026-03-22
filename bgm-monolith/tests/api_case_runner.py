@@ -7,14 +7,16 @@ async def run_api_case(client, case: dict):
     # 执行 setup 步骤
     for step in case.get("setup", []):
         body = _resolve_vars(step.get("body"), saved)
-        resp = await client.request(step["method"], step["path"], json=body)
+        path = _resolve_vars(step["path"], saved)
+        resp = await client.request(step["method"], path, json=body)
         if "save_as" in step:
             saved[step["save_as"]] = resp.json()
 
     # 执行 input
     inp = case["input"]
     body = _resolve_vars(inp.get("body"), saved)
-    resp = await client.request(inp["method"], inp["path"], json=body, params=inp.get("params"))
+    path = _resolve_vars(inp["path"], saved)
+    resp = await client.request(inp["method"], path, json=body, params=inp.get("params"))
 
     # 断言 expected
     exp = case["expected"]

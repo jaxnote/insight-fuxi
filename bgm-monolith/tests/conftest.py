@@ -31,11 +31,13 @@ async def db_session(db_engine):
 @pytest.fixture
 async def client(db_session):
     """FastAPI TestClient with dependency overrides."""
-    # Override storage deps to use test DB session
+    # Override storage deps — share the same store instance within a test
     from tests.factories import InMemoryConversationStore, InMemoryFileStore
 
-    app.dependency_overrides[get_conv_store] = lambda: InMemoryConversationStore()
-    app.dependency_overrides[get_file_store_dep] = lambda: InMemoryFileStore()
+    conv_store = InMemoryConversationStore()
+    file_store = InMemoryFileStore()
+    app.dependency_overrides[get_conv_store] = lambda: conv_store
+    app.dependency_overrides[get_file_store_dep] = lambda: file_store
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as c:
