@@ -22,7 +22,6 @@ dev = [
     "pytest-asyncio>=0.24",
     "pytest-cov>=6.0",
     "httpx>=0.28",
-    "factory-boy>=3.3",
     "aiosqlite>=0.21",
     "pyyaml>=6.0",
 ]

@@ -38,7 +38,7 @@ class MessageFactory:
 class InMemoryConversationStore:
     """In-memory mock for unit/integration tests."""
 
-    def __init__(self, session=None):
+    def __init__(self):  # 纯内存，不依赖 DB session
         self._data: dict[str, dict] = {}
         self._messages: dict[str, list] = {}
 

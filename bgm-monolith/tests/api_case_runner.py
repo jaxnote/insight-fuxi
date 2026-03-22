@@ -1,5 +1,4 @@
 import re
-import yaml
 
 
 async def run_api_case(client, case: dict):
@@ -25,29 +24,36 @@ async def run_api_case(client, case: dict):
 
 
 def _resolve_vars(obj, saved: dict):
-    """替换 ${conv_a.id} 等变量引用。"""
+    """递归替换 ${var.field} 占位符（仅替换字符串叶子）。"""
     if obj is None:
         return obj
-    s = str(obj)
-    for match in re.finditer(r"\$\{(\w+)\.(\w+)\}", s):
-        var_name, field = match.groups()
-        if var_name in saved:
-            s = s.replace(match.group(), str(saved[var_name][field]))
     if isinstance(obj, dict):
-        return yaml.safe_load(s)
-    return s
+        return {k: _resolve_vars(v, saved) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_resolve_vars(item, saved) for item in obj]
+    if isinstance(obj, str):
+        for match in re.finditer(r"\$\{(\w+)\.(\w+)\}", obj):
+            var_name, field = match.groups()
+            if var_name in saved:
+                obj = obj.replace(match.group(), str(saved[var_name][field]))
+        return obj
+    return obj
 
 
 def _assert_body(actual: dict, expected: dict, case_id: str):
     for key, val in expected.items():
         if key.endswith("_count"):
             real_key = key.replace("_count", "")
-            assert len(actual[real_key]) == val, f"{case_id}: {key}"
+            assert real_key in actual, f'{case_id}: response missing field "{real_key}"'
+            assert len(actual[real_key]) == val, f"{case_id}: {key} expected {val}, got {len(actual[real_key])}"
         elif "[" in key:
             # items[0].title 格式
             parts = re.match(r"(\w+)\[(\d+)\]\.(\w+)", key)
             if parts:
                 arr, idx, field = parts.group(1), int(parts.group(2)), parts.group(3)
-                assert actual[arr][idx][field] == val, f"{case_id}: {key}"
+                assert arr in actual, f'{case_id}: response missing field "{arr}"'
+                assert len(actual[arr]) > idx, f"{case_id}: {arr} has {len(actual[arr])} items, index {idx} out of range"
+                assert actual[arr][idx][field] == val, f"{case_id}: {key} expected {val}, got {actual[arr][idx].get(field)}"
         else:
-            assert actual[key] == val, f"{case_id}: {key} expected {val}, got {actual.get(key)}"
+            assert key in actual, f'{case_id}: response missing field "{key}"'
+            assert actual[key] == val, f"{case_id}: {key} expected {val}, got {actual[key]}"

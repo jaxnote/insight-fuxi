@@ -33,7 +33,7 @@ async def client(db_session):
     # Override storage deps to use test DB session
     from tests.factories import InMemoryConversationStore, InMemoryFileStore
 
-    app.dependency_overrides[get_conv_store] = lambda: InMemoryConversationStore(db_session)
+    app.dependency_overrides[get_conv_store] = lambda: InMemoryConversationStore()
     app.dependency_overrides[get_file_store_dep] = lambda: InMemoryFileStore()
 
     transport = ASGITransport(app=app)
