@@ -118,11 +118,14 @@ async def test_file_store_move(tmp_path):
 
 # ===== StorageFactory 测试 =====
 
-def test_factory_returns_mysql_store():
+async def test_factory_returns_mysql_store(db_session):
     from app.storage.factory import get_conversation_store
     from app.storage.conversation.mysql_store import MySQLConversationStore
-    store = get_conversation_store(session=None)
+    store = get_conversation_store(session=db_session)
     assert isinstance(store, MySQLConversationStore)
+    # 验证 store 可正常使用
+    conv = await store.create(title="工厂测试")
+    assert conv["title"] == "工厂测试"
 
 
 def test_factory_returns_local_file_store():

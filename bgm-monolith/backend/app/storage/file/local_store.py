@@ -17,7 +17,11 @@ class LocalFileStore(FileStoreBase):
         return self._base / project_id
 
     def _full_path(self, project_id: str, path: str) -> Path:
-        return self._project_dir(project_id) / path
+        project_dir = Path(self._base) / project_id
+        full = (project_dir / path).resolve()
+        if not str(full).startswith(str(project_dir.resolve())):
+            raise ValueError(f"非法路径（路径穿越）: {path}")
+        return full
 
     async def save(self, project_id: str, path: str, content: bytes) -> dict:
         full = self._full_path(project_id, path)

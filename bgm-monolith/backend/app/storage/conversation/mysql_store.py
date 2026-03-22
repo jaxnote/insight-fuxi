@@ -23,15 +23,22 @@ def _conv_to_dict(conv: Conversation) -> dict:
 
 
 def _msg_to_dict(msg: Message) -> dict:
+    try:
+        meta = json.loads(msg.meta) if msg.meta else None
+    except (json.JSONDecodeError, TypeError):
+        meta = None
     return {
         "id": msg.id,
         "conversation_id": msg.conversation_id,
         "role": msg.role,
         "content_type": msg.content_type,
         "content": msg.content,
-        "metadata": json.loads(msg.meta) if msg.meta else None,
+        "metadata": meta,
         "created_at": msg.created_at.isoformat(),
     }
+
+
+ALLOWED_UPDATE_FIELDS = {"title", "folder", "pinned", "model_name", "mode", "token_used", "token_limit"}
 
 
 class MySQLConversationStore(ConversationStoreBase):
@@ -50,11 +57,19 @@ class MySQLConversationStore(ConversationStoreBase):
         return _conv_to_dict(result) if result else None
 
     async def list_all(self, offset: int = 0, limit: int = 20) -> list[dict]:
-        stmt = select(Conversation).offset(offset).limit(limit)
+        stmt = (
+            select(Conversation)
+            .order_by(Conversation.pinned.desc(), Conversation.created_at.desc())
+            .offset(offset)
+            .limit(limit)
+        )
         rows = (await self._session.execute(stmt)).scalars().all()
         return [_conv_to_dict(r) for r in rows]
 
     async def update(self, conv_id: str, **kwargs) -> dict | None:
+        invalid = set(kwargs) - ALLOWED_UPDATE_FIELDS
+        if invalid:
+            raise ValueError(f"不允许更新的字段: {invalid}")
         conv = await self._session.get(Conversation, conv_id)
         if conv is None:
             return None
@@ -94,7 +109,7 @@ class MySQLConversationStore(ConversationStoreBase):
         return _msg_to_dict(msg)
 
     async def get_messages(self, conv_id: str) -> list[dict]:
-        stmt = select(Message).where(Message.conversation_id == conv_id)
+        stmt = select(Message).where(Message.conversation_id == conv_id).order_by(Message.created_at)
         rows = (await self._session.execute(stmt)).scalars().all()
         return [_msg_to_dict(r) for r in rows]
 
