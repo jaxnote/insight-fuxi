@@ -1,18 +1,33 @@
-import { Outlet } from 'react-router-dom'
+import { Outlet, NavLink } from 'react-router-dom'
+import { usePanelStore } from '../pages/nl-analysis/stores/panelStore'
 
 export default function AppLayout() {
+  const { panelA, panelC, panelD, togglePanel } = usePanelStore()
+
   return (
-    <div data-testid="app-layout" style={{ display: 'flex', height: '100vh' }}>
-      <nav data-testid="sidebar" style={{ width: 200, background: '#1a1a2e', color: '#fff', padding: 16 }}>
-        <h2 style={{ fontSize: 14, marginBottom: 16 }}>Insight Fuxi</h2>
-        <ul style={{ listStyle: 'none', padding: 0 }}>
-          <li><a href="/nl-analysis" style={{ color: '#fff', textDecoration: 'none' }}>NL Analysis</a></li>
-          <li><a href="/settings" style={{ color: '#fff', textDecoration: 'none' }}>Settings</a></li>
-        </ul>
-      </nav>
-      <main style={{ flex: 1, overflow: 'auto' }}>
-        <Outlet />
-      </main>
+    <div className="app" data-testid="app-layout">
+      <div className="top-bar">
+        <div className="dot dot-r" /><div className="dot dot-y" /><div className="dot dot-g" />
+        <div className="top-title">insight-fuxi · 自然语言分析</div>
+        <div className="top-actions">
+          <button
+            className={`top-btn${panelA.visible ? ' active' : ''}`}
+            title="会话历史"
+            onClick={() => togglePanel('panelA')}
+          >💬</button>
+          <button
+            className={`top-btn${panelC.visible ? ' active' : ''}`}
+            title="编辑器"
+            onClick={() => togglePanel('panelC')}
+          >📝</button>
+          <button
+            className={`top-btn${panelD.visible ? ' active' : ''}`}
+            title="文件树"
+            onClick={() => togglePanel('panelD')}
+          >📁</button>
+        </div>
+      </div>
+      <Outlet />
     </div>
   )
 }

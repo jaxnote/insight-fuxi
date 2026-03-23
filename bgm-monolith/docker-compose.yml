@@ -1,5 +1,8 @@
 version: "3.9"
 
+# ── 使用宿主机本地 MySQL（mysql -u root -p000000asd）──────────────────────────
+# Mac Docker Desktop 通过 host.docker.internal 访问宿主机端口
+
 services:
   backend:
     build:
@@ -8,15 +11,15 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=mysql+pymysql://root:password@db:3306/insight_fuxi
+      - DATABASE_URL=mysql+aiomysql://root:000000asd@host.docker.internal:3306/insight_fuxi
       - CONVERSATION_BACKEND=mysql
       - FILE_BACKEND=local
       - STORAGE_BASE_PATH=/data/storage
+      - DEBUG=false
     volumes:
       - backend-storage:/data/storage
-    depends_on:
-      db:
-        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"   # Linux 兼容；Mac 自动支持
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 10s
@@ -32,21 +35,5 @@ services:
     depends_on:
       - backend
 
-  db:
-    image: mysql:8.0
-    environment:
-      MYSQL_ROOT_PASSWORD: password
-      MYSQL_DATABASE: insight_fuxi
-    ports:
-      - "3306:3306"
-    volumes:
-      - db-data:/var/lib/mysql
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-ppassword"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-
 volumes:
-  db-data:
   backend-storage:

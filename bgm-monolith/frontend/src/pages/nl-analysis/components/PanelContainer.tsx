@@ -1,73 +1,135 @@
+import { useRef, useCallback } from 'react'
 import { usePanelStore } from '../stores/panelStore'
 import ConversationHistory from './panel-a/ConversationHistory'
-import ChatArea from './panel-b/ChatArea'
-import InputArea from './panel-b/InputArea'
+import PanelBContent from './panel-b/PanelBContent'
 import EditorPreview from './panel-c/EditorPreview'
-import ProjectSelector from './panel-d/ProjectSelector'
-import FileTree from './panel-d/FileTree'
+import PanelDContent from './panel-d/PanelDContent'
 
 export default function PanelContainer() {
-  const { panelA, panelB, panelC, panelD, togglePanel } = usePanelStore()
+  const { panelA, panelC, panelD, togglePanel, setPanelWidth } = usePanelStore()
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  const startResize = useCallback((
+    e: React.MouseEvent,
+    leftKey: 'panelA' | 'panelC',
+    leftW: number,
+    rightKey: 'panelC' | 'panelD',
+    rightW: number,
+  ) => {
+    e.preventDefault()
+    const startX = e.clientX
+    const onMove = (ev: MouseEvent) => {
+      const dx = ev.clientX - startX
+      setPanelWidth(leftKey, Math.max(180, leftW + dx))
+      setPanelWidth(rightKey, Math.max(180, rightW - dx))
+    }
+    const onUp = () => {
+      document.removeEventListener('mousemove', onMove)
+      document.removeEventListener('mouseup', onUp)
+    }
+    document.addEventListener('mousemove', onMove)
+    document.addEventListener('mouseup', onUp)
+  }, [setPanelWidth])
 
   return (
-    <div
-      data-testid="panel-container"
-      style={{ display: 'flex', height: '100%', background: '#0f0f1a', color: '#e0e0e0', position: 'relative' }}
-    >
-      <button
-        data-testid="toggle-panel-a"
-        onClick={() => togglePanel('panelA')}
-        style={{ position: 'absolute', top: 8, left: 8, zIndex: 10, background: 'transparent', border: '1px solid #444', color: '#ccc', cursor: 'pointer', borderRadius: 4, padding: '4px 8px' }}
-        title="Toggle Conversation History"
-      >
-        A
-      </button>
+    <div className="main-body" ref={containerRef}>
+      {/* Panel A collapsed bar OR visible toggle */}
+      {!panelA.visible ? (
+        <div className="panel-collapsed-bar">
+          <button
+            data-testid="toggle-panel-a"
+            className="pcb-btn"
+            onClick={() => togglePanel('panelA')}
+            title="展开会话历史"
+          >💬</button>
+        </div>
+      ) : (
+        <button
+          data-testid="toggle-panel-a"
+          className="pcb-btn"
+          style={{ display: 'none' }}
+          onClick={() => togglePanel('panelA')}
+          aria-hidden="false"
+        />
+      )}
 
-      <button
-        data-testid="toggle-panel-d"
-        onClick={() => togglePanel('panelD')}
-        style={{ position: 'absolute', top: 8, right: 8, zIndex: 10, background: 'transparent', border: '1px solid #444', color: '#ccc', cursor: 'pointer', borderRadius: 4, padding: '4px 8px' }}
-        title="Toggle File Tree"
-      >
-        D
-      </button>
-
+      {/* Panel A */}
       {panelA.visible && (
         <div
+          className="panel panel-a"
           data-testid="panel-a"
-          style={{ width: panelA.width, background: '#161629', borderRight: '1px solid #2a2a3e', paddingTop: 40, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}
+          style={{ width: panelA.width }}
         >
           <ConversationHistory />
         </div>
       )}
 
-      {panelB.visible && (
+      {panelA.visible && (
         <div
-          data-testid="panel-b"
-          style={{ flex: 1, display: 'flex', flexDirection: 'column', paddingTop: 40 }}
-        >
-          <ChatArea />
-          <InputArea />
-        </div>
+          className="resize-handle"
+          onMouseDown={(e) => startResize(e, 'panelA', panelA.width, 'panelC', panelC.width)}
+        />
       )}
+
+      {/* Panel B (always visible) */}
+      <div className="panel panel-b" data-testid="panel-b">
+        <PanelBContent />
+      </div>
 
       {panelC.visible && (
         <div
+          className="resize-handle"
+          onMouseDown={(e) => startResize(e, 'panelC', panelC.width, 'panelD', panelD.width)}
+        />
+      )}
+
+      {/* Panel C */}
+      {panelC.visible && (
+        <div
+          className="panel panel-c"
           data-testid="panel-c"
-          style={{ width: panelC.width, background: '#161629', borderLeft: '1px solid #2a2a3e' }}
+          style={{ width: panelC.width }}
         >
           <EditorPreview />
         </div>
       )}
 
+      {panelC.visible && panelD.visible && (
+        <div
+          className="resize-handle"
+          onMouseDown={(e) => startResize(e, 'panelC', panelC.width, 'panelD', panelD.width)}
+        />
+      )}
+
+      {/* Panel D */}
       {panelD.visible && (
         <div
+          className="panel panel-d"
           data-testid="panel-d"
-          style={{ width: panelD.width, background: '#161629', borderLeft: '1px solid #2a2a3e', paddingTop: 40, display: 'flex', flexDirection: 'column' }}
+          style={{ width: panelD.width }}
         >
-          <ProjectSelector />
-          <FileTree />
+          <PanelDContent />
         </div>
+      )}
+
+      {/* Panel D collapsed bar OR visible toggle */}
+      {!panelD.visible ? (
+        <div className="panel-collapsed-bar right-bar">
+          <button
+            data-testid="toggle-panel-d"
+            className="pcb-btn"
+            onClick={() => togglePanel('panelD')}
+            title="展开文件树"
+          >📁</button>
+        </div>
+      ) : (
+        <button
+          data-testid="toggle-panel-d"
+          className="pcb-btn"
+          style={{ display: 'none' }}
+          onClick={() => togglePanel('panelD')}
+          aria-hidden="false"
+        />
       )}
     </div>
   )
