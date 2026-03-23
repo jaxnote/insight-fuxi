@@ -1,0 +1,8 @@
+#!/Users/smzdm/Desktop/我的电脑/D盘/smzdm/repo_git/insight-fuxi/.worktrees/nl-analysis-page/bgm-monolith/backend/.venv/bin/python
+# -*- coding: utf-8 -*-
+import re
+import sys
+from watchfiles.cli import cli
+if __name__ == '__main__':
+    sys.argv[0] = re.sub(r'(-script\.pyw|\.exe)?$', '', sys.argv[0])
+    sys.exit(cli())

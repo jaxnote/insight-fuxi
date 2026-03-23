@@ -1,0 +1,44 @@
+suite: 项目管理 API
+module: projects
+version: "1.0"
+
+cases:
+  - id: API-PROJ-001
+    name: 创建项目_正常
+    priority: P0
+    tags: [crud, smoke, regression]
+    input: { method: POST, path: /api/projects, body: { name: "GMV分析项目", description: "月度GMV分析" } }
+    expected: { status: 201, body: { name: "GMV分析项目" } }
+
+  - id: API-PROJ-002
+    name: 创建项目_名称为空_返回422
+    priority: P0
+    tags: [crud, validation, regression]
+    input: { method: POST, path: /api/projects, body: { name: "" } }
+    expected: { status: 422 }
+
+  - id: API-PROJ-003
+    name: 列表项目
+    priority: P0
+    tags: [crud, regression]
+    setup:
+      - { method: POST, path: /api/projects, body: { name: "项目A" } }
+      - { method: POST, path: /api/projects, body: { name: "项目B" } }
+    input: { method: GET, path: /api/projects }
+    expected: { status: 200, body: { items_count: 2 } }
+
+  - id: API-PROJ-004
+    name: 获取项目详情
+    priority: P0
+    tags: [crud, regression]
+    setup:
+      - { method: POST, path: /api/projects, body: { name: "详情项目" }, save_as: proj }
+    input: { method: GET, path: "/api/projects/${proj.id}" }
+    expected: { status: 200, body: { name: "详情项目" } }
+
+  - id: API-PROJ-005
+    name: 获取不存在项目_返回404
+    priority: P0
+    tags: [crud, regression]
+    input: { method: GET, path: "/api/projects/nonexistent-id" }
+    expected: { status: 404 }

@@ -1,0 +1,33 @@
+[project]
+name = "insight-fuxi-backend"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.34",
+    "sqlalchemy>=2.0",
+    "pymysql>=1.1",
+    "aiomysql>=0.2",
+    "alembic>=1.14",
+    "pydantic>=2.0",
+    "pydantic-settings>=2.0",
+    "websockets>=13.0",
+    "httpx>=0.28",
+    "python-multipart>=0.0.18",
+    "aiofiles>=24.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+    "pytest-cov>=6.0",
+    "httpx>=0.28",
+    "aiosqlite>=0.21",
+    "pyyaml>=6.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["../tests"]
+asyncio_mode = "auto"
+addopts = "-v --tb=short --cov=app --cov-report=term-missing --cov-report=html:../reports/backend/coverage --junitxml=../reports/backend/junit.xml"
