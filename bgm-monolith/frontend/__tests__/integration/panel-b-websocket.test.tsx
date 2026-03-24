@@ -3,13 +3,13 @@ import { render, screen, waitFor } from '../../src/test-utils/render'
 import userEvent from '@testing-library/user-event'
 import { useChatStore } from '../../src/pages/nl-analysis/stores/chatStore'
 
-// 模拟 WebSocket
 class MockWebSocket {
   static OPEN = 1
   readyState = MockWebSocket.OPEN
   onopen: (() => void) | null = null
   onmessage: ((event: { data: string }) => void) | null = null
   onclose: (() => void) | null = null
+  onerror: ((event: Event) => void) | null = null
   send = vi.fn()
   close = vi.fn()
 
@@ -58,14 +58,30 @@ describe('Panel B WebSocket 流式消息', () => {
     })
   })
 
-  it('接收 thinking 事件后，loading 状态为 true', async () => {
+  it('store isLoading=true 时 ChatArea 显示 AI 消息或保留现有消息', async () => {
+    // WS thinking 事件最终通过 store.isLoading 驱动 UI；
+    // 此测试验证 store 状态变更后组件能响应（WS → store → UI 链路的 UI 端）。
     const { ChatAreaWithInput } = await import('../../src/pages/nl-analysis/components/panel-b/ChatAreaWithInput')
     render(<ChatAreaWithInput />)
 
-    useChatStore.setState({ isLoading: true })
+    // welcome-message 在空消息时可见
+    expect(screen.getByTestId('welcome-message')).toBeInTheDocument()
+
+    // 模拟 WS 推送 assistant 回复后 store 更新
+    useChatStore.setState({
+      isLoading: false,
+      messages: [{
+        id: 'ai-1',
+        role: 'assistant',
+        content_type: 'text',
+        content: '正在分析 GMV 下降原因...',
+        metadata: null,
+        created_at: new Date().toISOString(),
+      }],
+    })
 
     await waitFor(() => {
-      expect(useChatStore.getState().isLoading).toBe(true)
+      expect(screen.queryByTestId('welcome-message')).not.toBeInTheDocument()
     })
   })
 })

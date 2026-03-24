@@ -27,7 +27,12 @@ def _get_engine():
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     _, session_factory = _get_engine()
     async with session_factory() as session:
-        yield session
+        try:
+            yield session
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
 
 
 async def get_conv_store(session: AsyncSession = Depends(get_db)):
