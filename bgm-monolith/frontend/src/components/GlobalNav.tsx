@@ -4,7 +4,7 @@ import UserAvatar from './UserAvatar'
 
 export default function GlobalNav() {
   return (
-    <nav className="global-nav" data-testid="global-nav">
+      <nav className="global-nav" aria-label="主导航" data-testid="global-nav">
       <div className="global-nav-logo">
         <img
           src="/logo.png"

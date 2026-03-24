@@ -575,6 +575,12 @@ html, body, #root {
   background: var(--accent-dim);
 }
 
+.nav-link.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
 /* ===== NAV DROPDOWN ===== */
 .nav-dropdown-wrap {
   position: relative;
@@ -633,14 +639,14 @@ html, body, #root {
 }
 
 .nav-dropdown-wrap:hover .nav-dropdown-panel,
-.nav-dropdown-wrap:focus-within .nav-dropdown-panel {
+.nav-dropdown-wrap.open .nav-dropdown-panel {
   opacity: 1;
   pointer-events: auto;
   transform: translateY(0);
 }
 
 .nav-dropdown-wrap:hover .nav-dropdown-arrow,
-.nav-dropdown-wrap:focus-within .nav-dropdown-arrow {
+.nav-dropdown-wrap.open .nav-dropdown-arrow {
   transform: rotate(180deg);
 }
 
