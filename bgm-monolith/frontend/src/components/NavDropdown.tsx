@@ -29,7 +29,11 @@ export default function NavDropdown({ item }: Props) {
 
   return (
     <div className="nav-item nav-dropdown-wrap">
-      <button className={`nav-dropdown-trigger${isChildActive ? ' active' : ''}`} type="button">
+      <button
+        className={`nav-dropdown-trigger${isChildActive ? ' active' : ''}`}
+        type="button"
+        aria-haspopup="true"
+      >
         {item.icon && <span className="nav-item-icon">{item.icon}</span>}
         {item.label}
         <span className="nav-dropdown-arrow">▾</span>
