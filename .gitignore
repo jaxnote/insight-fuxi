@@ -1,6 +1,12 @@
 .DS_Store
 .cursorignore
 
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+
 # 项目配置与文档（不纳入版本控制）
 .claude/
 .cursor/
@@ -8,3 +14,8 @@ docs/
 docs_extend/
 idea.md
 notes.md
+.superpowers/
+.worktrees/
+
+# 测试报告产物（每次运行自动生成，不纳入版本控制）
+bgm-monolith/reports/
