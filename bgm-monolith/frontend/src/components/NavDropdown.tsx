@@ -28,7 +28,7 @@ export default function NavDropdown({ item }: Props) {
   }
 
   return (
-    <div className={`nav-item nav-dropdown-wrap${isChildActive ? ' child-active' : ''}`}>
+    <div className="nav-item nav-dropdown-wrap">
       <button className={`nav-dropdown-trigger${isChildActive ? ' active' : ''}`} type="button">
         {item.icon && <span className="nav-item-icon">{item.icon}</span>}
         {item.label}

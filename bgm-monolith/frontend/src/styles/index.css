@@ -630,13 +630,15 @@ html, body, #root {
   transition: opacity 0.15s ease, transform 0.15s ease;
 }
 
-.nav-dropdown-wrap:hover .nav-dropdown-panel {
+.nav-dropdown-wrap:hover .nav-dropdown-panel,
+.nav-dropdown-wrap:focus-within .nav-dropdown-panel {
   opacity: 1;
   pointer-events: auto;
   transform: translateY(0);
 }
 
-.nav-dropdown-wrap:hover .nav-dropdown-arrow {
+.nav-dropdown-wrap:hover .nav-dropdown-arrow,
+.nav-dropdown-wrap:focus-within .nav-dropdown-arrow {
   transform: rotate(180deg);
 }
 
