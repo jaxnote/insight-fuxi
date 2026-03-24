@@ -56,7 +56,6 @@ describe('useWebSocket', () => {
       readyState: 1, // OPEN
       send: vi.fn(),
       close: vi.fn(),
-      onmessage: null as unknown,
       onopen: null as unknown,
       onclose: null as unknown,
       onerror: null as unknown,

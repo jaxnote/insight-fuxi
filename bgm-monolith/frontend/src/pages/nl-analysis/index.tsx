@@ -2,8 +2,9 @@ import { useEffect } from 'react'
 import PanelContainer from './components/PanelContainer'
 import { useChatStore } from './stores/chatStore'
 import { useEditorStore } from './stores/editorStore'
+import type { Conversation } from '../../services/types'
 
-const DEMO_CONVERSATIONS = [
+const DEMO_CONVERSATIONS: Conversation[] = [
   { id: 'pinned-1', title: 'GMV归因分析', folder: null as string | null, pinned: 1, model_name: 'GPT-4o', mode: 'agent', token_used: 0, token_limit: 128000, created_at: '2026-03-22T12:00:00' },
   { id: 'today-1', title: '渠道ROI对比', folder: null, pinned: 0, model_name: 'Claude 3.5', mode: 'agent', token_used: 0, token_limit: 128000, created_at: '2026-03-22T10:00:00' },
   { id: 'today-2', title: '新客转化漏斗', folder: null, pinned: 0, model_name: 'GPT-4o', mode: 'agent', token_used: 0, token_limit: 128000, created_at: '2026-03-22T08:00:00' },
