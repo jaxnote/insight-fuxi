@@ -1,0 +1,95 @@
+/* 基础变量与商务风 (Corporate Slate) - 默认 */
+:root, .theme-corporate {
+  /* Nav specific */
+  --nav-bg: #1E293B;
+  --nav-text: #F8FAFC;
+  --nav-text-muted: #94A3B8;
+  --nav-primary: #3B82F6;
+  --nav-primary-glow: transparent;
+  --nav-border: #334155;
+  --nav-dropdown-bg: #1E293B;
+  --nav-dropdown-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  --nav-hover-bg: rgba(59, 130, 246, 0.15);
+  --nav-hover-text: #FFFFFF;
+  --nav-active-indicator: #3B82F6;
+  --nav-backdrop-blur: blur(0px);
+
+  /* Global overrides for Corporate */
+  --bg-0: #0F172A;
+  --bg-1: #1E293B;
+  --bg-2: #1E293B;
+  --bg-3: #334155;
+  --bg-4: #475569;
+  --border: #334155;
+  --border-hover: #475569;
+  --text-1: #F8FAFC;
+  --text-2: #CBD5E1;
+  --text-3: #94A3B8;
+  --text-4: #64748B;
+  --accent: #3B82F6;
+  --accent-dim: rgba(59, 130, 246, 0.15);
+}
+
+/* 科技风 (Cyber AI) */
+.theme-cyber {
+  /* Nav specific */
+  --nav-bg: rgba(10, 10, 15, 0.7);
+  --nav-text: #FFFFFF;
+  --nav-text-muted: #A1A1AA;
+  --nav-primary: #00F0FF;
+  --nav-primary-glow: 0 0 10px rgba(0, 240, 255, 0.5);
+  --nav-border: rgba(255, 255, 255, 0.05);
+  --nav-dropdown-bg: rgba(15, 15, 20, 0.85);
+  --nav-dropdown-shadow: 0 0 30px rgba(0, 240, 255, 0.1), inset 0 0 0 1px rgba(0, 240, 255, 0.2);
+  --nav-hover-bg: rgba(0, 240, 255, 0.1);
+  --nav-hover-text: #00F0FF;
+  --nav-active-indicator: #00F0FF;
+  --nav-backdrop-blur: blur(12px);
+
+  /* Global overrides for Cyber */
+  --bg-0: #05050A;
+  --bg-1: #0A0A0F;
+  --bg-2: #0F0F14;
+  --bg-3: #14141A;
+  --bg-4: #1A1A24;
+  --border: rgba(0, 240, 255, 0.2);
+  --border-hover: rgba(0, 240, 255, 0.4);
+  --text-1: #FFFFFF;
+  --text-2: #E4E4E7;
+  --text-3: #A1A1AA;
+  --text-4: #71717A;
+  --accent: #00F0FF;
+  --accent-dim: rgba(0, 240, 255, 0.15);
+}
+
+/* 现代SaaS风 (Modern Minimalist) */
+.theme-saas {
+  /* Nav specific */
+  --nav-bg: #FFFFFF;
+  --nav-text: #0F172A;
+  --nav-text-muted: #64748B;
+  --nav-primary: #4F46E5;
+  --nav-primary-glow: transparent;
+  --nav-border: #E2E8F0;
+  --nav-dropdown-bg: #FFFFFF;
+  --nav-dropdown-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0,0,0,0.05);
+  --nav-hover-bg: #F1F5F9;
+  --nav-hover-text: #0F172A;
+  --nav-active-indicator: #4F46E5;
+  --nav-backdrop-blur: blur(0px);
+
+  /* Global overrides for SaaS */
+  --bg-0: #F8FAFC;
+  --bg-1: #FFFFFF;
+  --bg-2: #FFFFFF;
+  --bg-3: #F1F5F9;
+  --bg-4: #E2E8F0;
+  --border: #E2E8F0;
+  --border-hover: #CBD5E1;
+  --text-1: #0F172A;
+  --text-2: #334155;
+  --text-3: #64748B;
+  --text-4: #94A3B8;
+  --accent: #4F46E5;
+  --accent-dim: rgba(79, 70, 229, 0.1);
+}
