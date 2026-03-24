@@ -9,8 +9,8 @@ export class WebSocketClient {
   ) {
     this.ws = new WebSocket(url)
     this.ws.onmessage = onMessage
-    if (onError) this.ws.onerror = onError
-    if (onClose) this.ws.onclose = onClose
+    this.ws.onerror = onError ?? ((e) => console.warn('[WebSocketClient] connection error', e))
+    this.ws.onclose = onClose ?? (() => console.warn('[WebSocketClient] connection closed'))
   }
 
   send(data: unknown): void {
