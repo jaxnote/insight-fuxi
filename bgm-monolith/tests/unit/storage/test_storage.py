@@ -103,6 +103,52 @@ async def test_conv_store_search_escapes_underscore_wildcard(db_session):
     assert results[0]["title"] == "user_query"
 
 
+# ── 测试缺口补全 ──────────────────────────────────────────────────────────────
+
+async def test_conv_store_count_escapes_percent_wildcard(db_session):
+    """count(query) 的 % 转义与 search() 一致，不应把 % 当通配符计数。"""
+    from app.storage.conversation.mysql_store import MySQLConversationStore
+    store = MySQLConversationStore(db_session)
+    await store.create(title="GMV增长50%")
+    await store.create(title="GMV增长50元")
+    count = await store.count("50%")
+    assert count == 1, f"count('50%') 应为 1，实际为 {count}"
+
+
+async def test_conv_store_search_escapes_backslash(db_session):
+    """搜索字符串中的 \\ 不应破坏转义序列，只命中字面含 \\ 的标题。"""
+    from app.storage.conversation.mysql_store import MySQLConversationStore
+    store = MySQLConversationStore(db_session)
+    await store.create(title=r"path\to\file")   # 包含字面反斜杠
+    await store.create(title="path/to/file")    # 不含反斜杠
+    results = await store.search("path\\to")
+    assert len(results) == 1, (
+        f"搜索 'path\\\\to' 应只返回含字面反斜杠的记录，实际 {len(results)} 条"
+    )
+    assert r"path\to\file" in results[0]["title"]
+
+
+# ── N4: 空查询应返回空列表而非全表 ───────────────────────────────────────────
+
+async def test_conv_store_search_empty_query_returns_empty(db_session):
+    """search('') 不应返回所有记录（防止全表匹配）。"""
+    from app.storage.conversation.mysql_store import MySQLConversationStore
+    store = MySQLConversationStore(db_session)
+    await store.create(title="会话A")
+    await store.create(title="会话B")
+    results = await store.search("")
+    assert results == [], f"空查询应返回空列表，实际返回 {len(results)} 条"
+
+
+async def test_conv_store_search_whitespace_query_returns_empty(db_session):
+    """search('   ') 纯空白查询也应返回空列表。"""
+    from app.storage.conversation.mysql_store import MySQLConversationStore
+    store = MySQLConversationStore(db_session)
+    await store.create(title="会话A")
+    results = await store.search("   ")
+    assert results == [], f"纯空白查询应返回空列表，实际返回 {len(results)} 条"
+
+
 # ===== FileStore 测试 =====
 
 async def test_file_store_save_and_read(tmp_path):

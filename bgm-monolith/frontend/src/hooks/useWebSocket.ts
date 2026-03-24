@@ -15,6 +15,9 @@ interface UseWebSocketOptions {
 export function useWebSocket(url: string | null, options: UseWebSocketOptions = {}) {
   const ws = useRef<WebSocket | null>(null)
   const [isConnected, setIsConnected] = useState(false)
+  // 保持 options 为最新引用，避免陈旧闭包（url 不变时 effect 不重跑）
+  const optionsRef = useRef(options)
+  useEffect(() => { optionsRef.current = options })
 
   useEffect(() => {
     if (!url) return
@@ -23,13 +26,13 @@ export function useWebSocket(url: string | null, options: UseWebSocketOptions = 
 
     ws.current.onopen = () => {
       setIsConnected(true)
-      options.onOpen?.()
+      optionsRef.current.onOpen?.()
     }
 
     ws.current.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data) as WsEvent
-        options.onMessage?.(data)
+        optionsRef.current.onMessage?.(data)
       } catch {
         // ignore non-JSON messages
       }
@@ -37,7 +40,7 @@ export function useWebSocket(url: string | null, options: UseWebSocketOptions = 
 
     ws.current.onclose = () => {
       setIsConnected(false)
-      options.onClose?.()
+      optionsRef.current.onClose?.()
     }
 
     return () => {

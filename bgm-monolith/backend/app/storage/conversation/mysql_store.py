@@ -130,6 +130,8 @@ class MySQLConversationStore(ConversationStoreBase):
         return [_msg_to_dict(r) for r in rows]
 
     async def search(self, query: str) -> list[dict]:
+        if not query.strip():
+            return []
         escaped = _escape_like(query)
         stmt = select(Conversation).where(
             Conversation.title.ilike(f"%{escaped}%", escape=_LIKE_ESCAPE_CHAR)

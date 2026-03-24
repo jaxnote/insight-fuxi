@@ -6,7 +6,7 @@ export async function apiFetch<T>(path: string, options?: RequestInit): Promise<
     headers: { 'Content-Type': 'application/json', ...options?.headers },
   })
   if (!res.ok) {
-    const body = await res.text().catch(() => res.statusText)
+    const body = await res.text().catch(() => `HTTP ${res.status}`)
     let detail = body
     try {
       detail = (JSON.parse(body) as { detail?: string }).detail ?? body
