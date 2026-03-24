@@ -2,9 +2,15 @@ import { Link } from 'react-router-dom'
 
 export interface PlaceholderPageProps {
   title: string
+  homePath?: string
+  homeLabel?: string
 }
 
-export default function PlaceholderPage({ title }: PlaceholderPageProps) {
+export default function PlaceholderPage({
+  title,
+  homePath = '/nl-analysis',
+  homeLabel = '返回问答对话',
+}: PlaceholderPageProps) {
   return (
     <div
       data-testid="placeholder-page"
@@ -34,7 +40,7 @@ export default function PlaceholderPage({ title }: PlaceholderPageProps) {
       </h1>
       <p style={{ margin: 0, fontSize: 14, color: 'var(--text-3)' }}>该页面建设中，敬请期待。</p>
       <Link
-        to="/nl-analysis"
+        to={homePath}
         style={{
           marginTop: 8,
           fontSize: 13,
@@ -42,7 +48,7 @@ export default function PlaceholderPage({ title }: PlaceholderPageProps) {
           textDecoration: 'none',
         }}
       >
-        返回问答对话
+        {homeLabel}
       </Link>
     </div>
   )
