@@ -33,26 +33,6 @@ export default function PanelContainer() {
 
   return (
     <div className="main-body" ref={containerRef}>
-      {/* Panel A collapsed bar OR visible toggle */}
-      {!panelA.visible ? (
-        <div className="panel-collapsed-bar">
-          <button
-            data-testid="toggle-panel-a"
-            className="pcb-btn"
-            onClick={() => togglePanel('panelA')}
-            title="展开会话历史"
-          >💬</button>
-        </div>
-      ) : (
-        <button
-          data-testid="toggle-panel-a"
-          className="pcb-btn"
-          style={{ display: 'none' }}
-          onClick={() => togglePanel('panelA')}
-          aria-hidden="false"
-        />
-      )}
-
       {/* Panel A */}
       {panelA.visible && (
         <div
@@ -112,25 +92,6 @@ export default function PanelContainer() {
         </div>
       )}
 
-      {/* Panel D collapsed bar OR visible toggle */}
-      {!panelD.visible ? (
-        <div className="panel-collapsed-bar right-bar">
-          <button
-            data-testid="toggle-panel-d"
-            className="pcb-btn"
-            onClick={() => togglePanel('panelD')}
-            title="展开文件树"
-          >📁</button>
-        </div>
-      ) : (
-        <button
-          data-testid="toggle-panel-d"
-          className="pcb-btn"
-          style={{ display: 'none' }}
-          onClick={() => togglePanel('panelD')}
-          aria-hidden="false"
-        />
-      )}
     </div>
   )
 }

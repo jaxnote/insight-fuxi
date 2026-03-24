@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useChatStore } from '../../stores/chatStore'
+import { usePanelStore } from '../../stores/panelStore'
 
 // ─── Mock demo messages ────────────────────────────────────────────────────
 
@@ -299,6 +300,7 @@ function SqlOutputExecuted() {
 
 export default function PanelBContent() {
   const { messages, addMessage } = useChatStore()
+  const { panelA, panelC, panelD, togglePanel } = usePanelStore()
   const [showWarning, setShowWarning] = useState(true)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -311,6 +313,12 @@ export default function PanelBContent() {
   return (
     <>
       <div className="pb-header">
+        <div className="pb-panel-toggles">
+          <button data-testid="toggle-panel-a" className={`top-btn${panelA.visible ? ' active' : ''}`} title="会话历史" onClick={() => togglePanel('panelA')}>💬</button>
+          <button data-testid="toggle-panel-c" className={`top-btn${panelC.visible ? ' active' : ''}`} title="编辑器" onClick={() => togglePanel('panelC')}>📝</button>
+          <button data-testid="toggle-panel-d" className={`top-btn${panelD.visible ? ' active' : ''}`} title="文件树" onClick={() => togglePanel('panelD')}>📁</button>
+        </div>
+        <div className="pb-header-divider" />
         <div className="pb-title">🤖 GMV归因分析</div>
         <button className="pb-header-btn">⚙️ 执行偏好</button>
         <button className="pb-header-btn">···</button>

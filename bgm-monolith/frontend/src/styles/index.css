@@ -158,6 +158,8 @@ html, body, #root {
   color: var(--text-3); font-size: 11px; cursor: pointer; transition: all 0.15s; font-family: var(--sans);
 }
 .pb-header-btn:hover { border-color: var(--border-hover); color: var(--text-2); }
+.pb-panel-toggles { display: flex; gap: 2px; flex-shrink: 0; }
+.pb-header-divider { width: 1px; height: 16px; background: var(--border); margin: 0 6px; flex-shrink: 0; }
 
 .pb-messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px; min-height: 0; }
 .pb-messages > * { flex-shrink: 0; }
