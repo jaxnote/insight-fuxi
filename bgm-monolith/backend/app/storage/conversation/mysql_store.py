@@ -1,4 +1,5 @@
 import json
+import logging
 import uuid
 
 from sqlalchemy import func, select
@@ -6,6 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.conversation import Conversation, Message
 from app.storage.conversation.base import ConversationStoreBase
+
+logger = logging.getLogger(__name__)
 
 
 def _conv_to_dict(conv: Conversation) -> dict:
@@ -26,6 +29,7 @@ def _msg_to_dict(msg: Message) -> dict:
     try:
         meta = json.loads(msg.meta) if msg.meta else None
     except (json.JSONDecodeError, TypeError):
+        logger.warning("Failed to parse meta JSON for message %s: %r", msg.id, msg.meta)
         meta = None
     return {
         "id": msg.id,

@@ -6,8 +6,11 @@ export class WebSocketClient {
     this.ws.onmessage = onMessage
   }
 
-  send(data: unknown) {
-    this.ws?.send(JSON.stringify(data))
+  send(data: unknown): void {
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+      throw new Error('WebSocket is not connected')
+    }
+    this.ws.send(JSON.stringify(data))
   }
 
   disconnect() {
