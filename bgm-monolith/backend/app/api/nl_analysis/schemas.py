@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Literal, Optional
 
 
 class ConversationCreate(BaseModel):
@@ -38,8 +38,8 @@ class MergeRequest(BaseModel):
 
 
 class MessageCreate(BaseModel):
-    role: str
-    content_type: str = "text"
+    role: Literal["user", "assistant"]
+    content_type: Literal["text", "markdown", "sql", "image"] = "text"
     content: str = Field(..., min_length=1)
 
 

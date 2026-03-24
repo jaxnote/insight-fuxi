@@ -76,6 +76,33 @@ async def test_conv_store_search(db_session):
     assert results[0]["title"] == "GMV分析"
 
 
+# ── I2-New: LIKE 查询应转义用户输入中的通配符 ──────────────────────────────
+async def test_conv_store_search_escapes_percent_wildcard(db_session):
+    """搜索字符串中的 % 不应被 SQL 当作通配符，只匹配字面含 % 的标题。"""
+    from app.storage.conversation.mysql_store import MySQLConversationStore
+    store = MySQLConversationStore(db_session)
+    await store.create(title="GMV增长50%")   # 包含字面 %
+    await store.create(title="GMV增长50元")  # 不含 %
+    results = await store.search("50%")
+    assert len(results) == 1, (
+        f"搜索 '50%' 应只返回字面包含 '50%' 的记录，实际返回 {len(results)} 条"
+    )
+    assert results[0]["title"] == "GMV增长50%"
+
+
+async def test_conv_store_search_escapes_underscore_wildcard(db_session):
+    """搜索字符串中的 _ 不应被 SQL 当作单字符通配符。"""
+    from app.storage.conversation.mysql_store import MySQLConversationStore
+    store = MySQLConversationStore(db_session)
+    await store.create(title="user_query")   # 包含字面 _
+    await store.create(title="userXquery")   # _ 位置是 X
+    results = await store.search("user_query")
+    assert len(results) == 1, (
+        f"搜索 'user_query' 应只返回包含字面 'user_query' 的记录，实际 {len(results)} 条"
+    )
+    assert results[0]["title"] == "user_query"
+
+
 # ===== FileStore 测试 =====
 
 async def test_file_store_save_and_read(tmp_path):

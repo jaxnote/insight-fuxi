@@ -47,9 +47,10 @@ export function useWebSocket(url: string | null, options: UseWebSocketOptions = 
   }, [url])
 
   const send = useCallback((data: unknown) => {
-    if (ws.current?.readyState === WebSocket.OPEN) {
-      ws.current.send(JSON.stringify(data))
+    if (!ws.current || ws.current.readyState !== WebSocket.OPEN) {
+      throw new Error('WebSocket is not connected')
     }
+    ws.current.send(JSON.stringify(data))
   }, [])
 
   return { isConnected, send }

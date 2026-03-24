@@ -44,6 +44,18 @@ def _msg_to_dict(msg: Message) -> dict:
 
 ALLOWED_UPDATE_FIELDS = {"title", "folder", "pinned", "model_name", "mode", "token_used", "token_limit"}
 
+_LIKE_ESCAPE_CHAR = "\\"
+
+
+def _escape_like(query: str) -> str:
+    """转义 LIKE 通配符，防止用户输入中的 % _ \\ 被 SQL 解释为通配符。"""
+    return (
+        query
+        .replace(_LIKE_ESCAPE_CHAR, _LIKE_ESCAPE_CHAR * 2)
+        .replace("%", f"{_LIKE_ESCAPE_CHAR}%")
+        .replace("_", f"{_LIKE_ESCAPE_CHAR}_")
+    )
+
 
 class MySQLConversationStore(ConversationStoreBase):
     def __init__(self, session: AsyncSession):
@@ -118,14 +130,18 @@ class MySQLConversationStore(ConversationStoreBase):
         return [_msg_to_dict(r) for r in rows]
 
     async def search(self, query: str) -> list[dict]:
-        stmt = select(Conversation).where(Conversation.title.ilike(f"%{query}%"))
+        escaped = _escape_like(query)
+        stmt = select(Conversation).where(
+            Conversation.title.ilike(f"%{escaped}%", escape=_LIKE_ESCAPE_CHAR)
+        )
         rows = (await self._session.execute(stmt)).scalars().all()
         return [_conv_to_dict(r) for r in rows]
 
     async def count(self, query: str | None = None) -> int:
         if query:
+            escaped = _escape_like(query)
             stmt = select(func.count()).select_from(Conversation).where(
-                Conversation.title.ilike(f"%{query}%")
+                Conversation.title.ilike(f"%{escaped}%", escape=_LIKE_ESCAPE_CHAR)
             )
         else:
             stmt = select(func.count()).select_from(Conversation)
