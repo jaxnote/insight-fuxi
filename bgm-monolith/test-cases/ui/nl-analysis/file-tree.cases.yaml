@@ -1,0 +1,28 @@
+suite: 文件树 Panel D
+module: nl-analysis
+version: "1.0"
+cases:
+  - id: UI-TREE-001
+    name: 项目选择器存在
+    priority: P0
+    tags: [render, smoke, regression]
+    setup:
+      store_state: { files: [] }
+    action: render_page
+    expected:
+      - { selector: "[data-testid=file-tree]", visible: true }
+      - { selector: "[data-testid=project-selector]", visible: true }
+
+  - id: UI-TREE-002
+    name: 有文件时渲染文件列表
+    priority: P0
+    tags: [render, regression]
+    setup:
+      store_state:
+        files:
+          - { path: "report.md" }
+          - { path: "data.sql" }
+    action: render_page
+    expected:
+      - { selector: "[data-testid=tree-node-report.md]", visible: true }
+      - { selector: "[data-testid=tree-node-data.sql]", visible: true }

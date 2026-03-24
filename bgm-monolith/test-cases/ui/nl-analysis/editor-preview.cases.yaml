@@ -1,0 +1,28 @@
+suite: 编辑器预览 Panel C
+module: nl-analysis
+version: "1.0"
+cases:
+  - id: UI-EDITOR-001
+    name: 无Tab时显示空态
+    priority: P0
+    tags: [render, smoke, regression]
+    setup:
+      store_state: { tabs: [] }
+    action: render_page
+    expected:
+      - { selector: "[data-testid=editor-preview]", visible: true }
+      - { selector: "[data-testid=editor-empty-state]", visible: true }
+
+  - id: UI-EDITOR-002
+    name: 有Tab时渲染TabBar
+    priority: P0
+    tags: [render, regression]
+    setup:
+      store_state:
+        tabs:
+          - { id: "t1", name: "report.md", type: "markdown", content: "# Hello" }
+    action: render_page
+    expected:
+      - { selector: "[data-testid=tab-bar]", visible: true }
+      - { selector: "[data-testid=tab-t1]", visible: true }
+      - { selector: "[data-testid=editor-empty-state]", visible: false }

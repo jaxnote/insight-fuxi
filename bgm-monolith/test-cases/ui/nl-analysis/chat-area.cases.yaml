@@ -1,0 +1,39 @@
+suite: 聊天消息区
+module: nl-analysis
+version: "1.0"
+cases:
+  - id: UI-CHAT-001
+    name: 空消息_显示欢迎界面
+    priority: P0
+    tags: [render, smoke, regression]
+    setup:
+      store_state: { messages: [] }
+    action: render_page
+    expected:
+      - { selector: "[data-testid=chat-area]", visible: true }
+      - { selector: "[data-testid=welcome-message]", visible: true }
+
+  - id: UI-CHAT-002
+    name: 用户消息_正确渲染
+    priority: P0
+    tags: [render, regression]
+    setup:
+      store_state:
+        messages:
+          - { id: "m1", role: "user", content_type: "text", content: "GMV为什么下降", metadata: null, created_at: "2026-01-01T00:00:00" }
+    action: render_page
+    expected:
+      - { selector: "[data-testid=user-message-m1]", visible: true }
+      - { selector: "[data-testid=welcome-message]", visible: false }
+
+  - id: UI-CHAT-003
+    name: AI消息_结果卡片渲染
+    priority: P0
+    tags: [render, regression]
+    setup:
+      store_state:
+        messages:
+          - { id: "m2", role: "assistant", content_type: "text", content: "分析结果", metadata: null, created_at: "2026-01-01T00:00:00" }
+    action: render_page
+    expected:
+      - { selector: "[data-testid=result-card-m2]", visible: true }
