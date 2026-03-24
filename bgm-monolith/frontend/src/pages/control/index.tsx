@@ -9,6 +9,7 @@ export default function ControlModule() {
       <Route path="monitoring" element={<PlaceholderPage title="调度监控" />} />
       <Route path="insights" element={<PlaceholderPage title="洞察推送" />} />
       <Route index element={<Navigate to="teams" replace />} />
+      <Route path="*" element={<Navigate to="teams" replace />} />
     </Routes>
   )
 }

@@ -11,6 +11,7 @@ export default function PluginsModule() {
       <Route path="models" element={<PlaceholderPage title="模型管理" />} />
       <Route path="templates" element={<PlaceholderPage title="模板管理" />} />
       <Route index element={<Navigate to="agents" replace />} />
+      <Route path="*" element={<Navigate to="agents" replace />} />
     </Routes>
   )
 }

@@ -9,6 +9,7 @@ export default function SettingsModule() {
       <Route path="channels" element={<PlaceholderPage title="频道管理" />} />
       <Route path="users" element={<PlaceholderPage title="用户管理" />} />
       <Route index element={<Navigate to="memory" replace />} />
+      <Route path="*" element={<Navigate to="memory" replace />} />
     </Routes>
   )
 }
