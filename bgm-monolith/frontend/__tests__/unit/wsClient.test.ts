@@ -135,4 +135,24 @@ describe('WebSocketClient', () => {
     expect(typeof mockWs.onclose).toBe('function')
     expect(() => mockWs.onclose!(new CloseEvent('close'))).not.toThrow()
   })
+
+  // ── C2: connect() 重复调用应先关闭旧连接（防连接泄漏）──────────────────────
+  it('connect() 重复调用时应先 close 旧 WebSocket 再建新连接', () => {
+    const firstWs = { readyState: 1, send: vi.fn(), close: vi.fn(), onmessage: null as unknown, onerror: null as unknown, onclose: null as unknown }
+    const secondWs = { readyState: 0, send: vi.fn(), close: vi.fn(), onmessage: null as unknown, onerror: null as unknown, onclose: null as unknown }
+    let callCount = 0
+    const MockWS = Object.assign(
+      vi.fn().mockImplementation(() => callCount++ === 0 ? firstWs : secondWs),
+      { OPEN: 1, CONNECTING: 0 }
+    )
+    vi.stubGlobal('WebSocket', MockWS)
+
+    const client = new WebSocketClient()
+    client.connect('ws://test', vi.fn())   // 第一次连接
+    client.connect('ws://test2', vi.fn())  // 第二次连接，应先关闭第一个
+
+    // 修复前：firstWs.close 不会被调用（旧连接泄漏）
+    // 修复后：firstWs.close 被调用
+    expect(firstWs.close).toHaveBeenCalledTimes(1)
+  })
 })

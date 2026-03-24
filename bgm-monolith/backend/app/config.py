@@ -15,6 +15,8 @@ class Settings(BaseSettings):
 
     openclaw_api_url: str = "http://localhost:8001"
     openclaw_api_key: str = ""
+    # True = 使用内置 mock 事件（开发/测试），False = 调用真实 OpenClaw API
+    mock_agent: bool = True
 
 
 settings = Settings()

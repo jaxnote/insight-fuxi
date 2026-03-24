@@ -7,6 +7,7 @@ export class WebSocketClient {
     onError?: (event: Event) => void,
     onClose?: (event: CloseEvent) => void,
   ) {
+    this.disconnect() // 先关闭旧连接，防止重复调用时泄漏
     this.ws = new WebSocket(url)
     this.ws.onmessage = onMessage
     this.ws.onerror = onError ?? ((e) => console.warn('[WebSocketClient] connection error', e))

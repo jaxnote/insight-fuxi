@@ -6,8 +6,8 @@ import pytest
 from pydantic import ValidationError
 
 
-def _error_locs(exc: ValidationError) -> list[str]:
-    """提取 ValidationError 中所有错误字段名。"""
+def _error_locs(exc: pytest.ExceptionInfo[ValidationError]) -> list[str]:
+    """提取 pytest.raises() 捕获的 ValidationError 中所有错误字段名。"""
     return [str(e["loc"][0]) for e in exc.value.errors() if e["loc"]]
 
 

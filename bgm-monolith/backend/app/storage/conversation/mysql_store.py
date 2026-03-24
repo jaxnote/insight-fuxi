@@ -129,23 +129,21 @@ class MySQLConversationStore(ConversationStoreBase):
         rows = (await self._session.execute(stmt)).scalars().all()
         return [_msg_to_dict(r) for r in rows]
 
+    def _title_filter(self, query: str):
+        """返回按标题模糊搜索的 WHERE 子句（已转义通配符）。"""
+        escaped = _escape_like(query)
+        return Conversation.title.ilike(f"%{escaped}%", escape=_LIKE_ESCAPE_CHAR)
+
     async def search(self, query: str) -> list[dict]:
         if not query.strip():
             return []
-        escaped = _escape_like(query)
-        stmt = select(Conversation).where(
-            Conversation.title.ilike(f"%{escaped}%", escape=_LIKE_ESCAPE_CHAR)
-        )
+        stmt = select(Conversation).where(self._title_filter(query))
         rows = (await self._session.execute(stmt)).scalars().all()
         return [_conv_to_dict(r) for r in rows]
 
     async def count(self, query: str | None = None) -> int:
+        stmt = select(func.count()).select_from(Conversation)
         if query:
-            escaped = _escape_like(query)
-            stmt = select(func.count()).select_from(Conversation).where(
-                Conversation.title.ilike(f"%{escaped}%", escape=_LIKE_ESCAPE_CHAR)
-            )
-        else:
-            stmt = select(func.count()).select_from(Conversation)
+            stmt = stmt.where(self._title_filter(query))
         result = await self._session.execute(stmt)
         return result.scalar_one()

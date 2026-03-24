@@ -54,11 +54,10 @@ async def update_conversation(
     body: ConversationUpdate,
     store=Depends(get_conv_store),
 ):
-    conv = await store.get(conv_id)
-    if not conv:
-        raise HTTPException(status_code=404, detail="Conversation not found")
     updates = body.model_dump(exclude_none=True)
     conv = await store.update(conv_id, **updates)
+    if not conv:
+        raise HTTPException(status_code=404, detail="Conversation not found")
     return conv
 
 

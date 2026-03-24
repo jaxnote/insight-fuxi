@@ -6,10 +6,11 @@ export interface WsEvent {
   metadata?: Record<string, unknown>
 }
 
-interface UseWebSocketOptions {
+export interface UseWebSocketOptions {
   onMessage?: (event: WsEvent) => void
   onOpen?: () => void
   onClose?: () => void
+  onError?: (event: Event) => void
 }
 
 export function useWebSocket(url: string | null, options: UseWebSocketOptions = {}) {
@@ -41,6 +42,10 @@ export function useWebSocket(url: string | null, options: UseWebSocketOptions = 
     ws.current.onclose = () => {
       setIsConnected(false)
       optionsRef.current.onClose?.()
+    }
+
+    ws.current.onerror = (event) => {
+      optionsRef.current.onError?.(event)
     }
 
     return () => {

@@ -44,7 +44,7 @@ async def test_openclaw_agent_run_streams_events():
     """OpenClaw agent 应流式产出 thinking/result/done 事件。"""
     from app.agents.openclaw_agent import OpenClawAgent
 
-    agent = OpenClawAgent(api_url="http://mock-openclaw", api_key="test-key")
+    agent = OpenClawAgent(api_url="http://mock-openclaw", api_key="test-key", mock_mode=True)
 
     # Mock HTTP 流式响应
     mock_lines = [
@@ -65,6 +65,48 @@ async def test_openclaw_agent_run_streams_events():
     assert any(e["type"] == "thinking" for e in events)
     assert any(e["type"] == "result" for e in events)
     assert any(e["type"] == "done" for e in events)
+
+
+# ── C1: mock_mode 隔离验证 ────────────────────────────────────────────────────
+
+@pytest.mark.asyncio
+async def test_openclaw_agent_mock_mode_returns_mock_events():
+    """mock_mode=True 时返回内置 mock 事件（开发/测试环境）。"""
+    from app.agents.openclaw_agent import OpenClawAgent
+
+    agent = OpenClawAgent(api_url="http://any", api_key="", mock_mode=True)
+    events = []
+    async for event in agent.run("test query", conversation_id="conv-1"):
+        events.append(event)
+
+    assert len(events) > 0
+    assert any(e["type"] == "done" for e in events)
+
+
+@pytest.mark.asyncio
+async def test_openclaw_agent_raises_not_implemented_when_mock_disabled():
+    """mock_mode=False 时应明确抛出 NotImplementedError，而非静默返回假数据。"""
+    from app.agents.openclaw_agent import OpenClawAgent
+
+    agent = OpenClawAgent(api_url="http://real-server", api_key="key", mock_mode=False)
+    with pytest.raises(NotImplementedError, match="httpx"):
+        async for _ in agent.run("test query", conversation_id="conv-1"):
+            pass
+
+
+@pytest.mark.asyncio
+async def test_openclaw_agent_from_settings_respects_mock_mode():
+    """from_settings() 应从 settings.mock_agent 读取 mock_mode。"""
+    from app.agents.openclaw_agent import OpenClawAgent
+    from unittest.mock import MagicMock
+
+    mock_settings = MagicMock()
+    mock_settings.openclaw_api_url = "http://test"
+    mock_settings.openclaw_api_key = "key"
+    mock_settings.mock_agent = False
+
+    agent = OpenClawAgent.from_settings(mock_settings)
+    assert agent.mock_mode is False
 
 
 # ===== AgentGateway 测试 =====

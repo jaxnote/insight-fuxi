@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -17,7 +17,7 @@ class Conversation(Base):
     mode: Mapped[str] = mapped_column(String(50), default="agent")
     token_used: Mapped[int] = mapped_column(Integer, default=0)
     token_limit: Mapped[int] = mapped_column(Integer, default=128000)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     messages: Mapped[list["Message"]] = relationship(
         "Message", back_populates="conversation", cascade="all, delete-orphan"
@@ -35,7 +35,7 @@ class Message(Base):
     content_type: Mapped[str] = mapped_column(String(50), default="text")
     content: Mapped[str] = mapped_column(Text, nullable=False)
     meta: Mapped[str | None] = mapped_column("metadata", Text, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     conversation: Mapped["Conversation"] = relationship(
         "Conversation", back_populates="messages"
