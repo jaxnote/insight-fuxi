@@ -6,7 +6,7 @@ import EditorPreview from './panel-c/EditorPreview'
 import PanelDContent from './panel-d/PanelDContent'
 
 export default function PanelContainer() {
-  const { panelA, panelC, panelD, togglePanel, setPanelWidth } = usePanelStore()
+  const { panelA, panelC, panelD, setPanelWidth } = usePanelStore()
   const containerRef = useRef<HTMLDivElement>(null)
 
   const startResize = useCallback((
