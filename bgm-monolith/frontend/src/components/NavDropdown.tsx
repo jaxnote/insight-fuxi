@@ -1,10 +1,19 @@
 import { useState, useCallback } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
+import * as LucideIcons from 'lucide-react'
 import type { MenuItem } from '../config/menuConfig'
 
 interface Props {
   item: MenuItem
 }
+
+// Helper to render icon by name
+const IconByName = ({ name, className }: { name?: string, className?: string }) => {
+  if (!name) return null;
+  const IconComponent = (LucideIcons as any)[name];
+  if (!IconComponent) return null;
+  return <IconComponent className={className} size={16} />;
+};
 
 export default function NavDropdown({ item }: Props) {
   const location = useLocation()
@@ -33,7 +42,7 @@ export default function NavDropdown({ item }: Props) {
           aria-disabled={item.disabled}
           onClick={item.disabled ? (e) => e.preventDefault() : undefined}
         >
-          {item.icon && <span className="nav-item-icon">{item.icon}</span>}
+          {item.icon && <span className="nav-item-icon"><IconByName name={item.icon} /></span>}
           {item.label}
         </NavLink>
       </div>
@@ -58,9 +67,9 @@ export default function NavDropdown({ item }: Props) {
           if (e.key === 'Escape') closeMenu()
         }}
       >
-        {item.icon && <span className="nav-item-icon">{item.icon}</span>}
+        {item.icon && <span className="nav-item-icon"><IconByName name={item.icon} /></span>}
         {item.label}
-        <span className="nav-dropdown-arrow">▾</span>
+        <span className="nav-dropdown-arrow"><LucideIcons.ChevronDown size={14} /></span>
       </button>
       <div className="nav-dropdown-panel">
         {item.children.map((child) => (
@@ -73,6 +82,7 @@ export default function NavDropdown({ item }: Props) {
             onFocus={openMenu}
             onBlur={closeMenu}
           >
+            {child.icon && <IconByName name={child.icon} className="opacity-70" />}
             {child.label}
           </NavLink>
         ))}
