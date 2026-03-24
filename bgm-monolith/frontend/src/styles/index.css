@@ -147,7 +147,7 @@ html, body, #root {
 .pa-more:hover { color: var(--accent); background: var(--accent-dim); }
 
 /* ===== PANEL B: CONVERSATION AREA ===== */
-.panel-b { flex: 1; min-width: 360px; background: var(--bg-1); display: flex; flex-direction: column; }
+.panel-b { flex: 1; min-width: 400px; background: var(--bg-1); display: flex; flex-direction: column; }
 
 .pb-header {
   padding: 10px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; flex-shrink: 0;
@@ -392,7 +392,7 @@ html, body, #root {
 .slash-footer:hover { color: var(--accent); background: var(--accent-dim); }
 
 /* ===== PANEL C: EDITOR ===== */
-.panel-c { min-width: 300px; width: 420px; background: var(--bg-1); border-left: 1px solid var(--border); }
+.panel-c { min-width: 280px; width: 380px; background: var(--bg-1); border-left: 1px solid var(--border); }
 
 .pc-tabs { display: flex; align-items: center; background: var(--bg-2); border-bottom: 1px solid var(--border); overflow-x: auto; flex-shrink: 0; }
 .pc-tabs::-webkit-scrollbar { height: 0; }
@@ -426,7 +426,7 @@ html, body, #root {
 .pc-empty { flex: 1; display: flex; align-items: center; justify-content: center; color: var(--text-4); font-size: 12px; font-family: var(--sans); }
 
 /* ===== PANEL D: FILE TREE ===== */
-.panel-d { min-width: 180px; width: 220px; background: var(--bg-1); border-left: 1px solid var(--border); }
+.panel-d { min-width: 160px; width: 200px; background: var(--bg-1); border-left: 1px solid var(--border); }
 
 .pd-project-select { padding: 10px 10px 0; }
 .pd-project-btn {
