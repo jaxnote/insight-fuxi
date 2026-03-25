@@ -146,7 +146,7 @@ jobs:
 
       - name: Frontend regression
         working-directory: bgm-monolith/frontend
-        run: npx vitest run --grep regression
+        run: npx vitest run -t regression
 
   # ──────────────────────────────────────────────
   # Job 5: CI 汇总（用于 Branch Protection required check）

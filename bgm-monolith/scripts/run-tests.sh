@@ -94,8 +94,8 @@ run_frontend() {
   )
 
   if [[ -n "$TAG" ]]; then
-    vitest_args+=(--grep "$TAG")
-    echo -e "${YELLOW}Tag 过滤: --grep $TAG${NC}"
+    vitest_args+=(-t "$TAG")
+    echo -e "${YELLOW}Tag 过滤: -t $TAG${NC}"
   fi
 
   cd "$PROJECT_ROOT/frontend"
