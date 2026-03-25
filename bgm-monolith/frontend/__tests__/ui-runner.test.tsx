@@ -14,12 +14,19 @@ import { useChatStore } from '../src/pages/nl-analysis/stores/chatStore'
 import { useEditorStore } from '../src/pages/nl-analysis/stores/editorStore'
 import { useFileTreeStore } from '../src/pages/nl-analysis/stores/fileTreeStore'
 
-const panelCases = loadCases('ui/nl-analysis/panel-layout.cases.yaml')
-const histCases = loadCases('ui/nl-analysis/conversation-history.cases.yaml')
-const chatCases = loadCases('ui/nl-analysis/chat-area.cases.yaml')
-const inputCases = loadCases('ui/nl-analysis/input-area.cases.yaml')
-const editorCases = loadCases('ui/nl-analysis/editor-preview.cases.yaml')
-const treeCases = loadCases('ui/nl-analysis/file-tree.cases.yaml')
+function withTagStr<T extends { id: string; tags?: string[] }>(cases: T[]) {
+  return cases.map((c) => ({
+    ...c,
+    tagStr: (c.tags || []).length ? `[${(c.tags || []).join(',')}]` : '',
+  }))
+}
+
+const panelCases = withTagStr(loadCases('ui/nl-analysis/panel-layout.cases.yaml'))
+const histCases = withTagStr(loadCases('ui/nl-analysis/conversation-history.cases.yaml'))
+const chatCases = withTagStr(loadCases('ui/nl-analysis/chat-area.cases.yaml'))
+const inputCases = withTagStr(loadCases('ui/nl-analysis/input-area.cases.yaml'))
+const editorCases = withTagStr(loadCases('ui/nl-analysis/editor-preview.cases.yaml'))
+const treeCases = withTagStr(loadCases('ui/nl-analysis/file-tree.cases.yaml'))
 
 function resetStores(tc: any) {
   usePanelStore.setState({
@@ -95,7 +102,7 @@ function assertExpected(expected: any[]) {
   }
 }
 
-describe.each(panelCases)('$id: $name', (tc: any) => {
+describe.each(panelCases)('$id$tagStr: $name', (tc: any) => {
   beforeEach(() => resetStores(tc))
   it('passes', async () => {
     const user = userEvent.setup()
@@ -105,7 +112,7 @@ describe.each(panelCases)('$id: $name', (tc: any) => {
   })
 })
 
-describe.each(histCases)('$id: $name', (tc: any) => {
+describe.each(histCases)('$id$tagStr: $name', (tc: any) => {
   beforeEach(() => resetStores(tc))
   it('passes', async () => {
     const user = userEvent.setup()
@@ -115,7 +122,7 @@ describe.each(histCases)('$id: $name', (tc: any) => {
   })
 })
 
-describe.each(chatCases)('$id: $name', (tc: any) => {
+describe.each(chatCases)('$id$tagStr: $name', (tc: any) => {
   beforeEach(() => resetStores(tc))
   it('passes', async () => {
     const user = userEvent.setup()
@@ -125,7 +132,7 @@ describe.each(chatCases)('$id: $name', (tc: any) => {
   })
 })
 
-describe.each(inputCases)('$id: $name', (tc: any) => {
+describe.each(inputCases)('$id$tagStr: $name', (tc: any) => {
   beforeEach(() => resetStores(tc))
   it('passes', async () => {
     const user = userEvent.setup()
@@ -135,7 +142,7 @@ describe.each(inputCases)('$id: $name', (tc: any) => {
   })
 })
 
-describe.each(editorCases)('$id: $name', (tc: any) => {
+describe.each(editorCases)('$id$tagStr: $name', (tc: any) => {
   beforeEach(() => resetStores(tc))
   it('passes', async () => {
     const user = userEvent.setup()
@@ -145,7 +152,7 @@ describe.each(editorCases)('$id: $name', (tc: any) => {
   })
 })
 
-describe.each(treeCases)('$id: $name', (tc: any) => {
+describe.each(treeCases)('$id$tagStr: $name', (tc: any) => {
   beforeEach(() => resetStores(tc))
   it('passes', async () => {
     const user = userEvent.setup()
