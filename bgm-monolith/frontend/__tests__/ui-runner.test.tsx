@@ -14,7 +14,7 @@ import { useChatStore } from '../src/pages/nl-analysis/stores/chatStore'
 import { useEditorStore } from '../src/pages/nl-analysis/stores/editorStore'
 import { useFileTreeStore } from '../src/pages/nl-analysis/stores/fileTreeStore'
 
-function withTagStr<T extends { id: string; tags?: string[] }>(cases: T[]) {
+function withTagStr<T extends { tags?: string[] }>(cases: T[]) {
   return cases.map((c) => ({
     ...c,
     tagStr: (c.tags || []).length ? `[${(c.tags || []).join(',')}]` : '',
