@@ -23,6 +23,7 @@ build/
 # 项目配置与文档（不纳入版本控制）
 .claude/
 .cursor/
+AGENTS.md
 docs/
 docs_extend/
 idea.md
