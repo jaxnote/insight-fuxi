@@ -8,6 +8,14 @@ export interface Conversation {
   token_used: number
   token_limit: number
   created_at: string
+  order: number
+  folderId: string | null
+}
+
+export interface Folder {
+  id: string
+  name: string
+  order: number
 }
 
 export interface Message {

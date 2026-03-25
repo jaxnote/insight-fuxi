@@ -1,4 +1,5 @@
 import { useRef, useCallback } from 'react'
+import { MessageSquare, FolderTree } from 'lucide-react'
 import { usePanelStore } from '../stores/panelStore'
 import ConversationHistory from './panel-a/ConversationHistory'
 import PanelBContent from './panel-b/PanelBContent'
@@ -6,14 +7,34 @@ import EditorPreview from './panel-c/EditorPreview'
 import PanelDContent from './panel-d/PanelDContent'
 
 export default function PanelContainer() {
-  const { panelA, panelC, panelD, setPanelWidth } = usePanelStore()
+  const { panelA, panelC, panelD, setPanelWidth, togglePanel } = usePanelStore()
   const containerRef = useRef<HTMLDivElement>(null)
 
-  const startResize = useCallback((
+  const startSingleResize = useCallback((
     e: React.MouseEvent,
-    leftKey: 'panelA' | 'panelC',
+    panelKey: 'panelA' | 'panelC',
+    currentWidth: number,
+    direction: 1 | -1,
+  ) => {
+    e.preventDefault()
+    const startX = e.clientX
+    const onMove = (ev: MouseEvent) => {
+      const dx = ev.clientX - startX
+      setPanelWidth(panelKey, Math.max(180, currentWidth + dx * direction))
+    }
+    const onUp = () => {
+      document.removeEventListener('mousemove', onMove)
+      document.removeEventListener('mouseup', onUp)
+    }
+    document.addEventListener('mousemove', onMove)
+    document.addEventListener('mouseup', onUp)
+  }, [setPanelWidth])
+
+  const startDualResize = useCallback((
+    e: React.MouseEvent,
+    leftKey: 'panelC',
     leftW: number,
-    rightKey: 'panelC' | 'panelD',
+    rightKey: 'panelD',
     rightW: number,
   ) => {
     e.preventDefault()
@@ -33,6 +54,19 @@ export default function PanelContainer() {
 
   return (
     <div className="main-body" ref={containerRef}>
+      {!panelA.visible ? (
+        <div className="panel-collapsed-bar">
+          <button
+            data-testid="collapsed-panel-a"
+            className="pcb-btn"
+            onClick={() => togglePanel('panelA')}
+            title="展开会话历史"
+          >
+            <MessageSquare size={15} />
+          </button>
+        </div>
+      ) : null}
+
       {/* Panel A */}
       {panelA.visible && (
         <div
@@ -47,7 +81,7 @@ export default function PanelContainer() {
       {panelA.visible && (
         <div
           className="resize-handle"
-          onMouseDown={(e) => startResize(e, 'panelA', panelA.width, 'panelC', panelC.width)}
+          onMouseDown={(e) => startSingleResize(e, 'panelA', panelA.width, 1)}
         />
       )}
 
@@ -59,7 +93,7 @@ export default function PanelContainer() {
       {panelC.visible && (
         <div
           className="resize-handle"
-          onMouseDown={(e) => startResize(e, 'panelC', panelC.width, 'panelD', panelD.width)}
+          onMouseDown={(e) => startSingleResize(e, 'panelC', panelC.width, -1)}
         />
       )}
 
@@ -77,7 +111,7 @@ export default function PanelContainer() {
       {panelC.visible && panelD.visible && (
         <div
           className="resize-handle"
-          onMouseDown={(e) => startResize(e, 'panelC', panelC.width, 'panelD', panelD.width)}
+          onMouseDown={(e) => startDualResize(e, 'panelC', panelC.width, 'panelD', panelD.width)}
         />
       )}
 
@@ -92,6 +126,18 @@ export default function PanelContainer() {
         </div>
       )}
 
+      {!panelD.visible ? (
+        <div className="panel-collapsed-bar right-bar">
+          <button
+            data-testid="collapsed-panel-d"
+            className="pcb-btn"
+            onClick={() => togglePanel('panelD')}
+            title="展开文件树"
+          >
+            <FolderTree size={15} />
+          </button>
+        </div>
+      ) : null}
     </div>
   )
 }
