@@ -149,23 +149,78 @@ jobs:
         run: npx vitest run -t regression
 
   # ──────────────────────────────────────────────
-  # Job 5: CI 汇总（用于 Branch Protection required check）
+  # Job 5: 安全扫描
+  # ──────────────────────────────────────────────
+  security:
+    name: "Security Scan"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: bgm-monolith/backend/pyproject.toml
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: bgm-monolith/frontend/package-lock.json
+
+      - name: Install Python dependencies
+        working-directory: bgm-monolith/backend
+        run: |
+          pip install -e ".[dev]"
+          pip install pip-audit bandit
+
+      - name: "pip-audit: Python dependency vulnerabilities"
+        run: pip-audit
+
+      - name: "npm audit: Node dependency vulnerabilities"
+        working-directory: bgm-monolith/frontend
+        run: npm audit --audit-level=high || true
+
+      - name: "bandit: Python SAST"
+        working-directory: bgm-monolith/backend
+        run: bandit -r app/ -f json -o ../reports/bandit.json --exit-zero && bandit -r app/ -ll
+
+      - name: "gitleaks: Secret detection"
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload security reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-reports
+          path: bgm-monolith/reports/bandit.json
+          retention-days: 14
+
+  # ──────────────────────────────────────────────
+  # Job 6: CI 汇总（用于 Branch Protection required check）
   # ──────────────────────────────────────────────
   ci-pass:
     name: "CI Pass"
     if: always()
-    needs: [frontend-build, frontend-test, backend-test]
+    needs: [frontend-build, frontend-test, backend-test, security]
     runs-on: ubuntu-latest
     steps:
       - name: Check all jobs
         run: |
           if [[ "${{ needs.frontend-build.result }}" != "success" ]] || \
              [[ "${{ needs.frontend-test.result }}" != "success" ]] || \
-             [[ "${{ needs.backend-test.result }}" != "success" ]]; then
+             [[ "${{ needs.backend-test.result }}" != "success" ]] || \
+             [[ "${{ needs.security.result }}" != "success" ]]; then
             echo "❌ CI failed"
             echo "  frontend-build: ${{ needs.frontend-build.result }}"
             echo "  frontend-test:  ${{ needs.frontend-test.result }}"
             echo "  backend-test:   ${{ needs.backend-test.result }}"
+            echo "  security:       ${{ needs.security.result }}"
             exit 1
           fi
           echo "✅ All CI checks passed"
