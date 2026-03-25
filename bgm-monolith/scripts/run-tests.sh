@@ -70,7 +70,7 @@ run_backend() {
 
   if [[ -n "$TAG" ]]; then
     pytest_args+=(-k "$TAG")
-    echo -e "${YELLOW}Tag 过滤: $TAG${NC}"
+    echo -e "${YELLOW}Tag 过滤: -k $TAG${NC}"
   fi
 
   cd "$PROJECT_ROOT/backend"
@@ -94,8 +94,8 @@ run_frontend() {
   )
 
   if [[ -n "$TAG" ]]; then
-    vitest_args+=(--grep "$TAG")
-    echo -e "${YELLOW}Tag 过滤: $TAG${NC}"
+    vitest_args+=(-t "$TAG")
+    echo -e "${YELLOW}Tag 过滤: -t $TAG${NC}"
   fi
 
   cd "$PROJECT_ROOT/frontend"

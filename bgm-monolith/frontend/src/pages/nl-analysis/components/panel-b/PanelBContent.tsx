@@ -1,5 +1,7 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { MessageSquare, FileEdit, FolderTree } from 'lucide-react'
 import { useChatStore } from '../../stores/chatStore'
+import { usePanelStore } from '../../stores/panelStore'
 
 // ─── Mock demo messages ────────────────────────────────────────────────────
 
@@ -299,8 +301,29 @@ function SqlOutputExecuted() {
 
 export default function PanelBContent() {
   const { messages, addMessage } = useChatStore()
+  const { panelA, panelC, panelD, togglePanel } = usePanelStore()
   const [showWarning, setShowWarning] = useState(true)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const inputWrapRef = useRef<HTMLDivElement>(null)
+
+  const startInputResize = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    const startY = e.clientY
+    const startH = inputWrapRef.current?.offsetHeight ?? 120
+    const onMove = (ev: MouseEvent) => {
+      const dy = startY - ev.clientY
+      const newH = Math.min(400, Math.max(80, startH + dy))
+      if (inputWrapRef.current) {
+        inputWrapRef.current.style.height = newH + 'px'
+      }
+    }
+    const onUp = () => {
+      document.removeEventListener('mousemove', onMove)
+      document.removeEventListener('mouseup', onUp)
+    }
+    document.addEventListener('mousemove', onMove)
+    document.addEventListener('mouseup', onUp)
+  }, [])
 
   useEffect(() => {
     if (messagesEndRef.current && typeof messagesEndRef.current.scrollIntoView === 'function') {
@@ -314,6 +337,31 @@ export default function PanelBContent() {
         <div className="pb-title">🤖 GMV归因分析</div>
         <button className="pb-header-btn">⚙️ 执行偏好</button>
         <button className="pb-header-btn">···</button>
+        <div className="pb-header-sep" />
+        <button
+          data-testid="toggle-panel-a"
+          className={`pb-header-btn${panelA.visible ? ' active' : ''}`}
+          onClick={() => togglePanel('panelA')}
+          title="会话历史"
+        >
+          <MessageSquare size={14} />
+        </button>
+        <button
+          data-testid="toggle-panel-c"
+          className={`pb-header-btn${panelC.visible ? ' active' : ''}`}
+          onClick={() => togglePanel('panelC')}
+          title="编辑器"
+        >
+          <FileEdit size={14} />
+        </button>
+        <button
+          data-testid="toggle-panel-d"
+          className={`pb-header-btn${panelD.visible ? ' active' : ''}`}
+          onClick={() => togglePanel('panelD')}
+          title="文件树"
+        >
+          <FolderTree size={14} />
+        </button>
       </div>
 
       <div className="pb-messages">
@@ -325,9 +373,8 @@ export default function PanelBContent() {
           <div className="bubble bubble-user">上个月 GMV 为什么下降了？按品类拆分看看</div>
         </div>
 
-        <ProgressSteps open={true} />
-
         <div className="msg ai"><div className="msg-who">🤖 分析助手 · 最终输出</div></div>
+        <ProgressSteps open={true} />
         <ResultCardText />
         <ResultCardChart />
         <ResultCardTable />
@@ -346,6 +393,7 @@ export default function PanelBContent() {
           <div className="bubble bubble-user">帮我写一个按渠道拆分日活 DAU 的 SQL</div>
         </div>
 
+        <div className="msg ai"><div className="msg-who">🤖 分析助手 · SQL 生成</div></div>
         <ProgressSteps open={false} />
         <SqlOutputPending />
 
@@ -355,6 +403,7 @@ export default function PanelBContent() {
           <div className="msg-who">👤 用户</div>
           <div className="bubble bubble-user">跑一下，看看结果</div>
         </div>
+        <div className="msg ai"><div className="msg-who">🤖 分析助手 · SQL 执行结果</div></div>
         <SqlOutputExecuted />
 
         {/* User-sent messages */}
@@ -370,7 +419,7 @@ export default function PanelBContent() {
         <div ref={messagesEndRef} />
       </div>
 
-      <PanelBInput />
+      <PanelBInput inputWrapRef={inputWrapRef} onDragBar={startInputResize} />
     </>
   )
 }
@@ -390,7 +439,10 @@ const SLASH_COMMANDS = [
 const TOKEN_PCT = 0.811
 const CIRCUMFERENCE = 56.55
 
-function PanelBInput() {
+function PanelBInput({ inputWrapRef, onDragBar }: {
+  inputWrapRef: React.RefObject<HTMLDivElement | null>
+  onDragBar: (e: React.MouseEvent) => void
+}) {
   const [value, setValue] = useState('')
   const [mode, setMode] = useState<'Agent' | 'Plan'>('Agent')
   const [showSlash, setShowSlash] = useState(false)
@@ -443,8 +495,8 @@ function PanelBInput() {
   const dashOffset = CIRCUMFERENCE - TOKEN_PCT * CIRCUMFERENCE
 
   return (
-    <div className="pb-input-wrap">
-      <div className="input-drag-bar"><div className="input-drag-bar-line" /></div>
+    <div className="pb-input-wrap" ref={inputWrapRef as React.RefObject<HTMLDivElement>}>
+      <div className="input-drag-bar" onMouseDown={onDragBar}><div className="input-drag-bar-line" /></div>
       <div className="input-box">
         {showSlash && (
           <div className="slash-menu show">
