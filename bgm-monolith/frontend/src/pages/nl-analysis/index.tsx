@@ -5,11 +5,12 @@ import { useEditorStore } from './stores/editorStore'
 import type { Conversation } from '../../services/types'
 
 const DEMO_CONVERSATIONS: Conversation[] = [
-  { id: 'pinned-1', title: 'GMV归因分析', folder: null as string | null, folderId: null, order: 0, pinned: 1, model_name: 'GPT-4o', mode: 'agent', token_used: 0, token_limit: 128000, created_at: '2026-03-22T12:00:00' },
-  { id: 'today-1', title: '渠道ROI对比', folder: null, folderId: null, order: 1, pinned: 0, model_name: 'Claude 3.5', mode: 'agent', token_used: 0, token_limit: 128000, created_at: '2026-03-22T10:00:00' },
-  { id: 'today-2', title: '新客转化漏斗', folder: null, folderId: null, order: 2, pinned: 0, model_name: 'GPT-4o', mode: 'agent', token_used: 0, token_limit: 128000, created_at: '2026-03-22T08:00:00' },
-  { id: 'week-1', title: '供应链分析', folder: null, folderId: null, order: 3, pinned: 0, model_name: 'DeepSeek-V3', mode: 'agent', token_used: 0, token_limit: 128000, created_at: '2026-03-17T10:00:00' },
-  { id: 'week-2', title: '退货率异常排查', folder: null, folderId: null, order: 4, pinned: 0, model_name: 'GPT-4o', mode: 'agent', token_used: 0, token_limit: 128000, created_at: '2026-03-16T10:00:00' },
+  { id: 'pinned-1', title: 'GMV归因分析', folder: null as string | null, folderId: null, order: 0, pinned: 1, model_name: 'GPT-4o', mode: 'agent', token_used: 0, token_limit: 128000, created_at: '2026-03-22T12:00:00', updated_at: '2026-03-25T14:30:00' },
+  { id: 'today-1', title: '渠道ROI对比', folder: null, folderId: null, order: 1, pinned: 0, model_name: 'Claude 3.5', mode: 'agent', token_used: 0, token_limit: 128000, created_at: '2026-03-22T10:00:00', updated_at: '2026-03-25T10:15:00' },
+  { id: 'today-2', title: '新客转化漏斗', folder: null, folderId: null, order: 2, pinned: 0, model_name: 'GPT-4o', mode: 'agent', token_used: 0, token_limit: 128000, created_at: '2026-03-22T08:00:00', updated_at: '2026-03-24T18:00:00' },
+  { id: 'week-1', title: '供应链分析', folder: null, folderId: null, order: 3, pinned: 0, model_name: 'DeepSeek-V3', mode: 'agent', token_used: 0, token_limit: 128000, created_at: '2026-03-17T10:00:00', updated_at: '2026-03-20T09:00:00' },
+  { id: 'week-2', title: '退货率异常排查', folder: null, folderId: null, order: 4, pinned: 0, model_name: 'GPT-4o', mode: 'agent', token_used: 0, token_limit: 128000, created_at: '2026-03-16T10:00:00', updated_at: '2026-03-16T16:00:00' },
+  { id: 'old-1', title: '用户留存分析', folder: null, folderId: null, order: 5, pinned: 0, model_name: 'Claude 3.5', mode: 'agent', token_used: 0, token_limit: 128000, created_at: '2026-03-01T09:00:00', updated_at: '2026-03-10T11:00:00' },
 ]
 
 const DEMO_TABS = [

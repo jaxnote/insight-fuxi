@@ -8,6 +8,7 @@ export interface Conversation {
   token_used: number
   token_limit: number
   created_at: string
+  updated_at: string
   order: number
   folderId: string | null
 }

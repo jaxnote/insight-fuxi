@@ -14,6 +14,7 @@ const mkConv = (overrides: Partial<import('../../src/services/types').Conversati
   token_used: 0,
   token_limit: 128000,
   created_at: '2026-01-01',
+  updated_at: '2026-01-01',
   order: 0,
   folderId: null,
   ...overrides,

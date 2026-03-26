@@ -10,7 +10,7 @@ import { usePanelStore } from '../../src/pages/nl-analysis/stores/panelStore'
 const server = setupServer(
   http.get('/api/nl-analysis/conversations', () => {
     return HttpResponse.json({
-      items: [{ id: 'c1', title: 'GMV分析', folder: null, pinned: 0, model_name: 'gpt-4o', mode: 'agent', token_used: 0, token_limit: 128000, created_at: '2026-01-01' }],
+      items: [{ id: 'c1', title: 'GMV分析', folder: null, pinned: 0, model_name: 'gpt-4o', mode: 'agent', token_used: 0, token_limit: 128000, created_at: '2026-01-01', updated_at: '2026-01-01' }],
       total: 1
     })
   }),

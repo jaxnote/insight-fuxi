@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
-import { MessageCircle, FolderInput, Pin } from 'lucide-react'
+import React, { useState, useRef, useEffect, useCallback } from 'react'
+import { MessageCircle, FolderInput, Pin, GripVertical } from 'lucide-react'
 import {
   DndContext,
   closestCenter,
@@ -18,6 +18,22 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 import { useChatStore } from '../../stores/chatStore'
 import type { Conversation } from '../../../../services/types'
+
+function formatRelativeTime(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime()
+  if (diff < 0) return '刚刚'
+  const seconds = Math.floor(diff / 1000)
+  if (seconds < 60) return '刚刚'
+  const minutes = Math.floor(seconds / 60)
+  if (minutes < 60) return `${minutes}分钟前`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}小时前`
+  const days = Math.floor(hours / 24)
+  if (days < 30) return `${days}天前`
+  const months = Math.floor(days / 30)
+  if (months < 12) return `${months}个月前`
+  return `${Math.floor(months / 12)}年前`
+}
 
 interface MergeMenuProps {
   folders: { id: string; name: string }[]
@@ -43,16 +59,21 @@ function MergeMenu({ folders, onClose, onMerge, onNewFolder }: MergeMenuProps) {
   )
 }
 
-function SortableItem({ id, children }: { id: string; children: React.ReactNode }) {
+interface SortableItemProps {
+  id: string
+  children: (dragHandleProps: Record<string, unknown>) => React.ReactNode
+}
+
+function SortableItem({ id, children }: SortableItemProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id })
-  const style = {
+  const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.4 : 1,
   }
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      {children}
+    <div ref={setNodeRef} style={style} {...attributes}>
+      {children(listeners ?? {})}
     </div>
   )
 }
@@ -64,6 +85,7 @@ export default function ConversationHistory() {
     setCurrentConversation,
     togglePin,
     renameConversation,
+    renameFolder,
     folders,
     reorderConversation,
     moveToFolder,
@@ -73,10 +95,12 @@ export default function ConversationHistory() {
   const [searchQuery, setSearchQuery] = useState('')
   const [openMergeId, setOpenMergeId] = useState<string | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [editingType, setEditingType] = useState<'conversation' | 'folder'>('conversation')
   const [editValue, setEditValue] = useState('')
   const [activeId, setActiveId] = useState<string | null>(null)
   const [folderOpenMap, setFolderOpenMap] = useState<Record<string, boolean>>({})
   const editInputRef = useRef<HTMLInputElement>(null)
+  const lastClickRef = useRef<{ id: string; time: number }>({ id: '', time: 0 })
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
@@ -89,17 +113,22 @@ export default function ConversationHistory() {
     }
   }, [editingId])
 
-  const startEditing = useCallback((id: string, title: string) => {
+  const startEditing = useCallback((id: string, title: string, type: 'conversation' | 'folder' = 'conversation') => {
     setEditingId(id)
+    setEditingType(type)
     setEditValue(title)
   }, [])
 
   const commitRename = useCallback(() => {
     if (editingId && editValue.trim()) {
-      renameConversation(editingId, editValue.trim())
+      if (editingType === 'folder') {
+        renameFolder(editingId, editValue.trim())
+      } else {
+        renameConversation(editingId, editValue.trim())
+      }
     }
     setEditingId(null)
-  }, [editingId, editValue, renameConversation])
+  }, [editingId, editingType, editValue, renameConversation, renameFolder])
 
   const cancelEditing = useCallback(() => {
     setEditingId(null)
@@ -109,13 +138,34 @@ export default function ConversationHistory() {
     setFolderOpenMap(prev => ({ ...prev, [fId]: !prev[fId] }))
   }, [])
 
+  const [showAll, setShowAll] = useState(false)
+  const MAX_VISIBLE = 5
+
   const filtered = searchQuery
     ? conversations.filter(c => c.title.toLowerCase().includes(searchQuery.toLowerCase()))
     : conversations
 
   const pinned = filtered.filter(c => c.pinned)
   const unpinned = filtered.filter(c => !c.pinned && !c.folderId)
-  const unpinnedIds = unpinned.map(c => c.id)
+
+  const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
+  const recentUnpinned = unpinned.filter(c => new Date(c.updated_at ?? c.created_at).getTime() >= sevenDaysAgo)
+  const olderUnpinned = unpinned.filter(c => new Date(c.updated_at ?? c.created_at).getTime() < sevenDaysAgo)
+
+  let visibleRecent = recentUnpinned
+  let visibleOlder = olderUnpinned
+  const totalCount = pinned.length + recentUnpinned.length + olderUnpinned.length
+
+  if (!showAll && totalCount > MAX_VISIBLE) {
+    let remaining = Math.max(0, MAX_VISIBLE - pinned.length)
+    visibleRecent = recentUnpinned.slice(0, remaining)
+    remaining = Math.max(0, remaining - visibleRecent.length)
+    visibleOlder = olderUnpinned.slice(0, remaining)
+  }
+
+  const hiddenCount = totalCount - pinned.length - visibleRecent.length - visibleOlder.length
+  const allVisibleUnpinned = [...visibleRecent, ...visibleOlder]
+  const unpinnedIds = allVisibleUnpinned.map(c => c.id)
 
   const handleDragStart = (event: DragStartEvent) => {
     if (editingId) return
@@ -142,16 +192,31 @@ export default function ConversationHistory() {
 
   const activeConv = activeId ? conversations.find(c => c.id === activeId) : null
 
-  const renderItem = (conv: Conversation) => {
+  const handleItemClick = useCallback((conv: Conversation) => {
+    if (editingId) return
+    const now = Date.now()
+    const last = lastClickRef.current
+    if (last.id === conv.id && now - last.time < 400) {
+      lastClickRef.current = { id: '', time: 0 }
+      startEditing(conv.id, conv.title)
+    } else {
+      lastClickRef.current = { id: conv.id, time: now }
+      setCurrentConversation(conv.id)
+    }
+  }, [editingId, startEditing, setCurrentConversation])
+
+  const renderItem = (conv: Conversation, dragHandleProps?: Record<string, unknown>) => {
     const isEditing = editingId === conv.id
     return (
       <div
         key={conv.id}
         data-testid={`agent-item-${conv.id}`}
         className={`pa-item${conv.id === currentConversationId ? ' active' : ''}`}
-        onClick={() => !isEditing && setCurrentConversation(conv.id)}
+        onClick={() => handleItemClick(conv)}
       >
-        <span className="pa-item-icon"><MessageCircle size={14} /></span>
+        <span className="pa-item-icon" {...(dragHandleProps ?? {})} style={{ cursor: 'grab' }}>
+          {dragHandleProps ? <GripVertical size={14} /> : <MessageCircle size={14} />}
+        </span>
         <div className="pa-item-info">
           {isEditing ? (
             <input
@@ -167,10 +232,7 @@ export default function ConversationHistory() {
               onClick={(e) => e.stopPropagation()}
             />
           ) : (
-            <div
-              className="pa-item-name"
-              onDoubleClick={(e) => { e.stopPropagation(); startEditing(conv.id, conv.title) }}
-            >
+            <div className="pa-item-name">
               {conv.title}
             </div>
           )}
@@ -180,6 +242,9 @@ export default function ConversationHistory() {
             </div>
           )}
         </div>
+        {!isEditing && (
+          <span className="pa-item-time">{formatRelativeTime(conv.updated_at ?? conv.created_at)}</span>
+        )}
         {!isEditing && (
           <div className="pa-item-actions">
             <button
@@ -213,19 +278,48 @@ export default function ConversationHistory() {
     )
   }
 
+  const handleFolderClick = useCallback((folder: { id: string; name: string }) => {
+    if (editingId) return
+    const now = Date.now()
+    const last = lastClickRef.current
+    if (last.id === folder.id && now - last.time < 400) {
+      lastClickRef.current = { id: '', time: 0 }
+      startEditing(folder.id, folder.name, 'folder')
+    } else {
+      lastClickRef.current = { id: folder.id, time: now }
+      toggleFolder(folder.id)
+    }
+  }, [editingId, startEditing, toggleFolder])
+
   const renderFolder = (folder: { id: string; name: string }) => {
     const isOpen = folderOpenMap[folder.id] !== false
+    const isFolderEditing = editingId === folder.id && editingType === 'folder'
     const folderConvs = filtered.filter(c => c.folderId === folder.id)
     if (folderConvs.length === 0) return null
     return (
       <div key={folder.id} className="pa-folder">
-        <div className="pa-folder-header" onClick={() => toggleFolder(folder.id)}>
+        <div className="pa-folder-header" onClick={() => handleFolderClick(folder)}>
           <span className={`pa-folder-arrow${isOpen ? ' open' : ''}`}>▶</span>
-          <span className="pa-folder-name">📁 {folder.name}</span>
+          {isFolderEditing ? (
+            <input
+              ref={editInputRef}
+              className="pa-item-rename-input"
+              value={editValue}
+              onChange={(e) => setEditValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') commitRename()
+                if (e.key === 'Escape') cancelEditing()
+              }}
+              onBlur={commitRename}
+              onClick={(e) => e.stopPropagation()}
+            />
+          ) : (
+            <span className="pa-folder-name">📁 {folder.name}</span>
+          )}
         </div>
         {isOpen && (
           <div className="pa-folder-items">
-            {folderConvs.map(renderItem)}
+            {folderConvs.map(c => renderItem(c))}
           </div>
         )}
       </div>
@@ -256,12 +350,10 @@ export default function ConversationHistory() {
             <Pin size={12} /> 置顶
           </div>
           <div className="pa-pinned-list">
-            {pinned.map(renderItem)}
+            {pinned.map(c => renderItem(c))}
           </div>
         </div>
       )}
-
-      <div className="pa-title">Agents</div>
 
       <div className="pa-list">
         {filtered.length === 0 ? (
@@ -275,13 +367,35 @@ export default function ConversationHistory() {
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
           >
-            <SortableContext items={unpinnedIds} strategy={verticalListSortingStrategy}>
-              {unpinned.map(conv => (
-                <SortableItem key={conv.id} id={conv.id}>
-                  {renderItem(conv)}
-                </SortableItem>
-              ))}
-            </SortableContext>
+            {visibleRecent.length > 0 && (
+              <>
+                <div className="pa-group-title">Agents</div>
+                <SortableContext items={unpinnedIds} strategy={verticalListSortingStrategy}>
+                  {visibleRecent.map(conv => (
+                    <SortableItem key={conv.id} id={conv.id}>
+                      {(dragHandleProps) => renderItem(conv, dragHandleProps)}
+                    </SortableItem>
+                  ))}
+                </SortableContext>
+              </>
+            )}
+
+            {visibleOlder.length > 0 && (
+              <>
+                <div className="pa-group-title">7天前</div>
+                <SortableContext items={visibleOlder.map(c => c.id)} strategy={verticalListSortingStrategy}>
+                  {visibleOlder.map(conv => (
+                    <SortableItem key={conv.id} id={conv.id}>
+                      {(dragHandleProps) => renderItem(conv, dragHandleProps)}
+                    </SortableItem>
+                  ))}
+                </SortableContext>
+              </>
+            )}
+
+            {visibleRecent.length === 0 && visibleOlder.length === 0 && (
+              <div className="pa-group-title">Agents</div>
+            )}
 
             <DragOverlay>
               {activeConv ? (
@@ -300,7 +414,16 @@ export default function ConversationHistory() {
           </DndContext>
         )}
 
-        {conversations.length > 0 && <div className="pa-more">Show more</div>}
+        {!showAll && hiddenCount > 0 && (
+          <div className="pa-more" onClick={() => setShowAll(true)}>
+            展开更多（{hiddenCount}）
+          </div>
+        )}
+        {showAll && totalCount > MAX_VISIBLE && (
+          <div className="pa-more" onClick={() => setShowAll(false)}>
+            收起
+          </div>
+        )}
       </div>
     </div>
   )

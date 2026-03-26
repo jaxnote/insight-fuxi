@@ -16,6 +16,7 @@ interface ChatStoreState {
   moveToFolder: (convId: string, folderId: string) => void
   removeFromFolder: (convId: string) => void
   createFolderFromMerge: (dragId: string, dropId: string) => void
+  renameFolder: (folderId: string, name: string) => void
 }
 
 export const useChatStore = create<ChatStoreState>((set) => ({
@@ -58,6 +59,10 @@ export const useChatStore = create<ChatStoreState>((set) => ({
     conversations: s.conversations.map(c =>
       c.id === convId ? { ...c, folderId: null } : c
     )
+  })),
+
+  renameFolder: (folderId, name) => set((s) => ({
+    folders: s.folders.map(f => f.id === folderId ? { ...f, name } : f),
   })),
 
   createFolderFromMerge: (dragId, dropId) => set((s) => {
